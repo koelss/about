@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>koels.site — Links</title>
+<title>koels</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
@@ -156,6 +156,7 @@ body::after{
 .links .link-btn:nth-child(4){animation-delay:0.40s}
 .links .link-btn:nth-child(5){animation-delay:0.46s}
 .links .link-btn:nth-child(6){animation-delay:0.52s}
+.links .link-btn:nth-child(7){animation-delay:0.58s}
 </style>
 </head>
 <body>
@@ -163,12 +164,59 @@ body::after{
 <div class="container">
 
   <div class="avatar">
-    <div class="avatar-inner">K</div>
+    <div class="avatar-inner" id="avatar-inner">
+      <img id="avatar-img" src="" alt="" style="width:76px;height:76px;border-radius:50%;object-fit:cover;display:none;">
+      <span id="avatar-fallback">K</span>
+    </div>
   </div>
 
   <div class="profile">
     <div class="name">Kyle</div>
     <div class="handle">koels.site</div>
+
+  </div>
+
+  <!-- discord card -->
+  <div id="discord-card" style="
+    width:100%;border-radius:12px;
+    border:1px solid var(--border);
+    background:var(--surface);
+    overflow:hidden;
+    opacity:0;animation:fadeUp 0.5s var(--ease) 0.35s forwards;
+  ">
+    <!-- label -->
+    <div style="padding:14px 14px 12px;font-family:var(--mono);font-size:0.6rem;letter-spacing:0.14em;color:var(--dim);text-transform:uppercase;">What I'm Doing</div>
+
+    <!-- card body -->
+    <div style="padding:0 14px 14px;display:flex;align-items:center;gap:12px;">
+      <!-- avatar -->
+      <div style="width:56px;height:56px;border-radius:50%;flex-shrink:0;background:var(--surface2);overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <img id="card-avatar-img" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;">
+        <span id="card-avatar-fallback" style="font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--accent2);">K</span>
+      </div>
+
+      <!-- right: name + status -->
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--mono);font-size:0.85rem;font-weight:700;color:var(--white);" id="card-displayname">koels</div>
+        <div style="font-family:var(--mono);font-size:0.65rem;color:var(--dim);letter-spacing:0.05em;margin-bottom:6px;" id="card-username">@koels</div>
+        <div id="card-status-badge" style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);">
+          <span id="card-status-dot" style="width:7px;height:7px;border-radius:50%;background:var(--dim);flex-shrink:0;"></span>
+          <span id="card-status-label" style="font-family:var(--mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--dim);text-transform:uppercase;">offline</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- spotify row -->
+    <div id="spotify-row" style="display:none;margin:0 14px 14px;padding-top:12px;border-top:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#1db954;flex-shrink:0;"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        <div style="min-width:0;">
+          <div id="spotify-song" style="font-family:var(--mono);font-size:0.65rem;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <div id="spotify-artist" style="font-family:var(--mono);font-size:0.6rem;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <div class="links">
@@ -186,6 +234,14 @@ body::after{
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
       </span>
       <span class="link-label">YouTube</span>
+      <span class="link-arrow">→</span>
+    </a>
+
+    <a class="link-btn" href="https://open.spotify.com/user/31ebewr5xpear5jnzoocdi6jrmbm?si=97f0682d24884434" target="_blank" rel="noopener">
+      <span class="link-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+      </span>
+      <span class="link-label">Spotify</span>
       <span class="link-arrow">→</span>
     </a>
 
@@ -229,6 +285,82 @@ body::after{
   </div>
 
 </div>
+
+<script>
+(function(){
+  const DISCORD_ID = '1135328814394785903';
+  const cardDot = document.getElementById('card-status-dot');
+  const cardLabel = document.getElementById('card-status-label');
+  const avatarImg = document.getElementById('avatar-img');
+  const avatarFallback = document.getElementById('avatar-fallback');
+  const cardAvatarImg = document.getElementById('card-avatar-img');
+  const cardAvatarFallback = document.getElementById('card-avatar-fallback');
+  const cardDisplayname = document.getElementById('card-displayname');
+  const cardUsername = document.getElementById('card-username');
+  const spotifyRow = document.getElementById('spotify-row');
+  const spotifySong = document.getElementById('spotify-song');
+  const spotifyArtist = document.getElementById('spotify-artist');
+
+  const STATUS = {
+    online:  { color: '#00ff88', label: 'online' },
+    idle:    { color: '#ffa500', label: 'idle' },
+    dnd:     { color: '#ff4757', label: 'do not disturb' },
+    offline: { color: '#747f8d', label: 'offline' },
+  };
+
+  function setAvatar(url){
+    [avatarImg, cardAvatarImg].forEach(img => {
+      img.src = url;
+      img.style.display = 'block';
+    });
+    avatarFallback.style.display = 'none';
+    cardAvatarFallback.style.display = 'none';
+  }
+
+  async function fetchStatus(){
+    try {
+      const res = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
+      const json = await res.json();
+      if(!json.success) return;
+      const data = json.data;
+      const s = data.discord_status || 'offline';
+      const { color, label } = STATUS[s] || STATUS.offline;
+      const glow = s !== 'offline' ? `0 0 6px ${color}88` : 'none';
+
+      // card status
+      cardDot.style.background = color;
+      cardDot.style.boxShadow = glow;
+      cardLabel.textContent = label;
+      cardLabel.style.color = s !== 'offline' ? color : 'var(--dim)';
+
+      // status text / spotify
+      if(data.listening_to_spotify && data.spotify){
+        spotifySong.textContent = data.spotify.song;
+        spotifyArtist.textContent = data.spotify.artist;
+        spotifyRow.style.display = 'block';
+      } else {
+        spotifyRow.style.display = 'none';
+      }
+
+      // username
+      const user = data.discord_user;
+      if(user.global_name || user.display_name){
+        cardDisplayname.textContent = user.global_name || user.display_name;
+      }
+      cardUsername.textContent = '@' + user.username;
+
+      // avatar
+      if(user.avatar){
+        const ext = user.avatar.startsWith('a_') ? 'gif' : 'png';
+        setAvatar(`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=128`);
+      }
+    } catch(e){}
+  }
+
+  fetchStatus();
+  setInterval(fetchStatus, 3000);
+})();
+</script>
 
 </body>
 </html>
