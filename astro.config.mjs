@@ -1,0 +1,6 @@
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  site: 'https://koels.site',
+  output: 'static',
+});
