@@ -291,10 +291,10 @@ const map = L.map('map', {
   preferCanvas: true
 });
 
-// Stadia Alidade Smooth Dark — clean dark basemap, no API key needed
-L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-  attribution: '© Stadia Maps © OpenMapTiles © OpenStreetMap',
-  maxZoom: 18
+// CartoDB Dark Matter — free, no API key
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap contributors © CARTO',
+  subdomains: 'abcd', maxZoom: 19
 }).addTo(map);
 
 // Custom pane for radar tiles so they are NOT affected by the base tile CSS filter
@@ -303,23 +303,17 @@ map.getPane('radarPane').style.zIndex = 300;
 map.getPane('radarPane').classList.add('radar-pane');
 
 // ── RADAR via Iowa State IEM NEXRAD ───────────────────────────────────────
-// IEM serves NEXRAD tiles at known timestamp offsets, no auth needed
-// URL pattern: https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-{ts}/{z}/{x}/{y}.png
-// ts values: 900913 = now, 900913-m05m = 5min ago, 900913-m10m = 10min ago … up to m50m
-
-const IEM_TS = [
-  '900913-m50m','900913-m45m','900913-m40m','900913-m35m',
-  '900913-m30m','900913-m25m','900913-m20m','900913-m15m',
-  '900913-m10m','900913-m05m','900913'
-];
-// Minutes-ago values matching each timestamp
+const IEM_TS   = ['900913-m50m','900913-m45m','900913-m40m','900913-m35m',
+                   '900913-m30m','900913-m25m','900913-m20m','900913-m15m',
+                   '900913-m10m','900913-m05m','900913'];
 const IEM_MINS = [50,45,40,35,30,25,20,15,10,5,0];
+const FRAME_MS = 650;   // ms per frame during playback
+const HOLD_MS  = 1600;  // ms to hold on last frame before looping
 
-let frames       = [];   // { ts, minsAgo, layer }
-let currentIdx   = 0;
-let playing      = false;
-let playTimer    = null;
-let loadedAll    = false;
+let frames     = [];
+let currentIdx = 0;
+let playing    = false;
+let playTimer  = null;
 
 function setStatus(msg, show) {
   const el = document.getElementById('radar-status');
@@ -328,121 +322,108 @@ function setStatus(msg, show) {
 }
 
 function buildFrames() {
-  // Clear any old layers
-  frames.forEach(f => { if (map.hasLayer(f.layer)) map.removeLayer(f.layer); });
+  frames.forEach(f => { try { map.removeLayer(f.layer); } catch(e){} });
   frames = IEM_TS.map((ts, i) => ({
-    ts,
-    minsAgo: IEM_MINS[i],
+    ts, minsAgo: IEM_MINS[i],
     layer: L.tileLayer(
       `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-${ts}/{z}/{x}/{y}.png`,
-      { opacity: 0, pane: 'radarPane', maxZoom: 18, zIndex: 300 }
+      { opacity: 0, pane: 'radarPane', maxZoom: 18 }
     )
   }));
   buildTicks();
 }
 
+// Add ALL layers to the map at opacity 0 right away so tiles start downloading
+function preloadAll() {
+  setStatus('Loading radar…', true);
+  frames.forEach(f => f.layer.addTo(map));
+  // Show the most recent frame once its tiles are ready
+  let shown = false;
+  frames[frames.length - 1].layer.once('load', () => {
+    if (!shown) { shown = true; showFrame(frames.length - 1); setStatus('', false); startPlay(); }
+  });
+  // Fallback: show + play after 5s even if load event never fires
+  setTimeout(() => {
+    if (!shown) { shown = true; showFrame(frames.length - 1); setStatus('', false); startPlay(); }
+  }, 5000);
+}
+
 function showFrame(idx) {
-  const prev = frames[currentIdx];
-  if (prev && map.hasLayer(prev.layer)) prev.layer.setOpacity(0);
+  // Hide old
+  if (frames[currentIdx]) frames[currentIdx].layer.setOpacity(0);
   currentIdx = Math.max(0, Math.min(idx, frames.length - 1));
-  const cur = frames[currentIdx];
-  if (!map.hasLayer(cur.layer)) cur.layer.addTo(map);
-  cur.layer.setOpacity(0.75);
+  frames[currentIdx].layer.setOpacity(0.8);
   updateUI();
 }
 
 function updateUI() {
-  const f = frames[currentIdx];
-  const isNow = f.minsAgo === 0;
+  const f   = frames[currentIdx];
   const now = new Date();
-  const t = new Date(now.getTime() - f.minsAgo * 60000);
-  const h = t.getHours(), m = t.getMinutes();
-  const hh = ((h % 12) || 12).toString();
-  const mm = m.toString().padStart(2,'0');
-  const ampm = h < 12 ? 'AM' : 'PM';
-  const agoTxt = isNow ? 'LIVE · NOW' : `${f.minsAgo}m ago`;
+  const t   = new Date(now.getTime() - f.minsAgo * 60000);
+  const h   = t.getHours(), m = t.getMinutes();
+  const hh  = ((h % 12) || 12);
+  const mm  = m.toString().padStart(2, '0');
+  const ap  = h < 12 ? 'AM' : 'PM';
+  const ago = f.minsAgo === 0 ? 'LIVE · NOW' : `${f.minsAgo}m ago`;
 
   document.getElementById('time-display').innerHTML =
-    `<span class="t-time">${hh}:${mm} ${ampm}</span>` +
+    `<span class="t-time">${hh}:${mm} ${ap}</span>` +
     `<span class="t-sep"> · </span>` +
-    `<span class="t-ago">${agoTxt}</span>` +
+    `<span class="t-ago">${ago}</span>` +
     `<span class="t-sep"> · </span>` +
-    `<span class="t-pos">${currentIdx+1}/${frames.length}</span>`;
+    `<span class="t-pos">${currentIdx + 1}/${frames.length}</span>`;
 
-  const pct = frames.length > 1 ? (currentIdx / (frames.length - 1)) * 100 : 100;
-  document.getElementById('scrubber-fill').style.width  = pct + '%';
+  const pct = (currentIdx / (frames.length - 1)) * 100;
+  document.getElementById('scrubber-fill').style.width = pct + '%';
   document.getElementById('scrubber-thumb').style.left  = pct + '%';
 }
 
 function buildTicks() {
-  const el = document.getElementById('scrubber-ticks');
-  // Show 5 evenly spaced labels
   const picks = [0, 2, 5, 7, frames.length - 1];
-  el.innerHTML = picks.map(i => {
+  document.getElementById('scrubber-ticks').innerHTML = picks.map(i => {
     const f = frames[i];
-    const isNow = f.minsAgo === 0;
-    const label = isNow ? 'NOW' : `-${f.minsAgo}m`;
-    return `<span class="tick-label${isNow ? ' is-now' : ''}">${label}</span>`;
+    const label = f.minsAgo === 0 ? 'NOW' : `-${f.minsAgo}m`;
+    return `<span class="tick-label${f.minsAgo === 0 ? ' is-now' : ''}">${label}</span>`;
   }).join('');
 }
-
-// Preload: add all layers to map at opacity 0 so browser fetches tiles
-function preloadAll() {
-  setStatus('Loading radar tiles…', true);
-  let loaded = 0;
-  frames.forEach(f => {
-    if (!map.hasLayer(f.layer)) f.layer.addTo(map);
-    f.layer.once('load', () => {
-      loaded++;
-      if (loaded === frames.length) {
-        loadedAll = true;
-        setStatus('', false);
-      }
-    });
-  });
-  // Show latest frame immediately, don't wait for all
-  showFrame(frames.length - 1);
-  // Hide status after 4s regardless
-  setTimeout(() => setStatus('', false), 4000);
-}
-
-// Refresh radar frames every 5 min (IEM updates every ~5 min)
-function refreshRadar() {
-  buildFrames();
-  preloadAll();
-}
-
-buildFrames();
-preloadAll();
-setInterval(refreshRadar, 300000);
 
 // ── PLAY / PAUSE ──────────────────────────────────────────────────────────
 function animStep() {
   if (!playing) return;
   const next = currentIdx + 1;
   if (next >= frames.length) {
-    // Pause 1.5s on last frame then loop
     playTimer = setTimeout(() => {
-      if (playing) { showFrame(0); playTimer = setTimeout(animStep, 600); }
-    }, 1500);
+      if (playing) { showFrame(0); playTimer = setTimeout(animStep, FRAME_MS); }
+    }, HOLD_MS);
   } else {
     showFrame(next);
-    playTimer = setTimeout(animStep, 600);
+    playTimer = setTimeout(animStep, FRAME_MS);
   }
 }
 
+function startPlay() {
+  if (playing) return;
+  playing = true;
+  document.getElementById('play-icon').style.display  = 'none';
+  document.getElementById('pause-icon').style.display = '';
+  showFrame(0);
+  playTimer = setTimeout(animStep, FRAME_MS);
+}
+
 function togglePlay() {
-  playing = !playing;
-  document.getElementById('play-icon').style.display  = playing ? 'none' : '';
-  document.getElementById('pause-icon').style.display = playing ? '' : 'none';
   if (playing) {
-    // Start from beginning if we're at the end
-    if (currentIdx >= frames.length - 1) showFrame(0);
-    playTimer = setTimeout(animStep, 600);
-  } else {
+    playing = false;
     clearTimeout(playTimer); playTimer = null;
+    document.getElementById('play-icon').style.display  = '';
+    document.getElementById('pause-icon').style.display = 'none';
+  } else {
+    startPlay();
   }
 }
+
+buildFrames();
+preloadAll();
+setInterval(() => { buildFrames(); preloadAll(); }, 300000);
 
 // ── SCRUBBER ──────────────────────────────────────────────────────────────
 function scrubTo(clientX) {
