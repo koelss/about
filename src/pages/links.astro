@@ -8,6 +8,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>koels.site — Links</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2303030a'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='100%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%236c5ce7'/%3E%3Cstop offset='100%25' stop-color='%23a29bfe'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cline x1='7' y1='25' x2='22' y2='10' stroke='url(%23g)' stroke-width='3.5' stroke-linecap='round'/%3E%3Cpolyline points='13,8 24,8 24,19' fill='none' stroke='url(%23g)' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<!-- Open Graph -->
+<meta property="og:title" content="koels — links" />
+<meta property="og:description" content="youtube · spotify · tiktok · instagram · x · github" />
+<meta property="og:url" content="https://koels.site/links" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://koels.site/og-links.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="koels — links" />
+<meta name="twitter:description" content="youtube · spotify · tiktok · instagram · x · github" />
+<meta name="twitter:image" content="https://koels.site/og-links.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script is:inline>
@@ -33,13 +45,13 @@ html[data-theme="aero"] {
   --toggle-inactive: #64a8c8;
   --toggle-inactive-hover: #1a5a8a;
 }
-
+ 
 /* =====================================================
    RESET
    ===================================================== */
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; font-size:17px; }
-
+ 
 /* =====================================================
    BODY
    ===================================================== */
@@ -48,7 +60,7 @@ body {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   padding:40px 20px;
 }
-
+ 
 html[data-theme="dark"] body {
   font-family:"Inter",system-ui,sans-serif;
   background:#03030a; color:#f0eeff;
@@ -66,7 +78,7 @@ html[data-theme="dark"] body::after {
   background:radial-gradient(ellipse,rgba(108,92,231,0.12) 0%,transparent 70%);
   pointer-events:none; z-index:0;
 }
-
+ 
 html[data-theme="aero"] body {
   font-family:"Nunito",system-ui,sans-serif;
   /* classic Frutiger Aero sky */
@@ -94,7 +106,7 @@ html[data-theme="aero"] body::after {
     radial-gradient(circle 120px at 52% 92%, rgba(200,240,255,0.3) 0%, transparent 65%),
     radial-gradient(circle  55px at 78% 52%, rgba(255,255,255,0.3) 0%, transparent 60%);
 }
-
+ 
 /* =====================================================
    LAYOUT
    ===================================================== */
@@ -105,7 +117,7 @@ html[data-theme="aero"] body::after {
 }
 html[data-theme="dark"] .container { gap:24px; }
 html[data-theme="aero"] .container { gap:14px; }
-
+ 
 /* =====================================================
    THEME TOGGLE
    ===================================================== */
@@ -119,7 +131,7 @@ html[data-theme="aero"] .container { gap:14px; }
 }
 html[data-theme="dark"] .theme-toggle { box-shadow:0 2px 14px rgba(0,0,0,0.45); }
 html[data-theme="aero"] .theme-toggle { box-shadow:0 4px 20px rgba(80,160,230,0.2), inset 0 1px 0 #fff; }
-
+ 
 .theme-btn {
   display:flex; align-items:center; gap:5px;
   padding:5px 13px; border-radius:999px;
@@ -137,7 +149,7 @@ html[data-theme="aero"] .theme-btn.active {
   color:#fff;
   box-shadow:0 3px 12px rgba(30,100,210,0.35), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,80,160,0.2);
 }
-
+ 
 /* =====================================================
    AVATAR — DARK
    ===================================================== */
@@ -157,7 +169,7 @@ html[data-theme="dark"] .avatar-inner {
   display:flex; align-items:center; justify-content:center;
   font-family:"JetBrains Mono",monospace; font-size:1.2rem; font-weight:700; color:#a29bfe;
 }
-
+ 
 /* =====================================================
    AVATAR — AERO
    ===================================================== */
@@ -186,16 +198,16 @@ html[data-theme="aero"] .avatar-inner {
   display:flex; align-items:center; justify-content:center;
   font-family:"Nunito",sans-serif; font-size:1.3rem; font-weight:800; color:#1a6baa;
 }
-
+ 
 @keyframes spin { to { transform:rotate(360deg); } }
-
+ 
 /* =====================================================
    PROFILE
    ===================================================== */
 .profile { text-align:center; display:flex; flex-direction:column; }
 html[data-theme="dark"] .profile { gap:6px; }
 html[data-theme="aero"] .profile { gap:3px; }
-
+ 
 html[data-theme="dark"] .name {
   font-family:"JetBrains Mono",monospace; font-size:1.1rem; font-weight:700;
   letter-spacing:0.05em; color:#fff;
@@ -213,7 +225,7 @@ html[data-theme="aero"] .handle {
   font-family:"Nunito",sans-serif; font-size:0.75rem; font-weight:600;
   color:#4a90c0; letter-spacing:0.06em; text-transform:uppercase;
 }
-
+ 
 /* =====================================================
    DISCORD CARD — DARK
    ===================================================== */
@@ -250,7 +262,7 @@ html[data-theme="dark"] #spotify-artist { font-family:"JetBrains Mono",monospace
 html[data-theme="dark"] .time-txt { font-family:"JetBrains Mono",monospace; font-size:0.55rem; color:rgba(240,238,255,0.4); }
 html[data-theme="dark"] #game-name { font-family:"JetBrains Mono",monospace; font-size:0.65rem; color:#fff; }
 html[data-theme="dark"] .game-sub { font-family:"JetBrains Mono",monospace; font-size:0.6rem; color:rgba(240,238,255,0.4); }
-
+ 
 /* =====================================================
    DISCORD CARD — AERO
    ===================================================== */
@@ -300,14 +312,14 @@ html[data-theme="aero"] #spotify-artist { font-family:"Nunito",sans-serif; font-
 html[data-theme="aero"] .time-txt { font-family:"Nunito",sans-serif; font-size:0.55rem; font-weight:600; color:#5a9dc0; }
 html[data-theme="aero"] #game-name { font-family:"Nunito",sans-serif; font-size:0.68rem; font-weight:700; color:#0d4a80; }
 html[data-theme="aero"] .game-sub { font-family:"Nunito",sans-serif; font-size:0.62rem; font-weight:600; color:#5a9dc0; }
-
+ 
 /* =====================================================
    LINK BUTTONS — DARK
    ===================================================== */
 .links { width:100%; display:flex; flex-direction:column; }
 html[data-theme="dark"] .links { gap:10px; }
 html[data-theme="aero"] .links { gap:9px; }
-
+ 
 html[data-theme="dark"] .link-btn {
   display:flex; align-items:center; gap:14px;
   padding:14px 18px; border-radius:10px;
@@ -329,7 +341,7 @@ html[data-theme="dark"] .link-btn:hover::before { transform:translateX(100%); }
 html[data-theme="dark"] .link-btn:active { transform:translateY(0); }
 html[data-theme="dark"] .link-arrow { font-size:0.65rem; color:rgba(240,238,255,0.4); transition:transform 0.2s,color 0.2s; }
 html[data-theme="dark"] .link-btn:hover .link-arrow { transform:translateX(2px); color:rgba(240,238,255,0.68); }
-
+ 
 /* =====================================================
    LINK BUTTONS — AERO (glossy pill)
    ===================================================== */
@@ -370,17 +382,17 @@ html[data-theme="aero"] .link-btn:hover::after { transform:translateX(100%); }
 html[data-theme="aero"] .link-btn:active { transform:translateY(0); }
 html[data-theme="aero"] .link-arrow { font-size:0.72rem; color:#5ba8d8; transition:transform 0.18s,color 0.18s; }
 html[data-theme="aero"] .link-btn:hover .link-arrow { transform:translateX(3px); color:#1a6baa; }
-
+ 
 /* shared icon */
 .link-icon { width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
 .link-icon svg { width:18px; height:18px; fill:currentColor; }
 .link-label { flex:1; }
-
+ 
 /* =====================================================
    CD SPIN (shared keyframe for spotify + float disc)
    ===================================================== */
 @keyframes disc-spin { to { transform:rotate(360deg); } }
-
+ 
 /* =====================================================
    FLOATING MUSIC CONTROLS (Aero only)
    ===================================================== */
@@ -395,7 +407,7 @@ html[data-theme="aero"] .link-btn:hover .link-arrow { transform:translateX(3px);
   opacity:1; pointer-events:auto;
   transform:translateY(0);
 }
-
+ 
 /* ---- volume wrap ---- */
 #vol-wrap {
   display:flex; align-items:center; gap:6px;
@@ -439,7 +451,7 @@ html[data-theme="aero"] .link-btn:hover .link-arrow { transform:translateX(3px);
   box-shadow:0 1px 4px rgba(20,100,220,0.4);
   cursor:pointer;
 }
-
+ 
 /* ---- fab play/pause button ---- */
 #music-fab {
   width:48px; height:48px; border-radius:50%; flex-shrink:0;
@@ -466,7 +478,7 @@ html[data-theme="aero"] .link-btn:hover .link-arrow { transform:translateX(3px);
 }
 #music-fab:active { transform:scale(0.95); }
 #music-fab svg { width:16px; height:16px; fill:#fff; position:relative; z-index:1; }
-
+ 
 /* =====================================================
    FOOTER
    ===================================================== */
@@ -478,7 +490,7 @@ html[data-theme="aero"] .footer {
   font-family:"Nunito",sans-serif; font-size:0.65rem; font-weight:600;
   letter-spacing:0.04em; color:#5a9dc0; opacity:0.9;
 }
-
+ 
 /* =====================================================
    ENTRANCE ANIMATIONS
    ===================================================== */
@@ -490,8 +502,35 @@ html[data-theme="aero"] .footer {
 .container > *:nth-child(5){animation-delay:0.36s}
 .container > *:nth-child(6){animation-delay:0.44s}
 .container > *:nth-child(7){animation-delay:0.52s}
-@keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-
+/* =====================================================
+   LYRICS
+   ===================================================== */
+#lyrics-scroll::-webkit-scrollbar { display:none; }
+ 
+.lyric-line {
+  font-size:0.78rem; line-height:1.5; padding:2px 0;
+  color:rgba(240,238,255,0.22);
+  transition:color 0.4s ease, font-size 0.3s ease, opacity 0.4s ease;
+  cursor:default; text-align:left;
+}
+.lyric-line.active {
+  color:#ffffff;
+  font-size:0.92rem;
+  font-weight:700;
+}
+.lyric-line.near {
+  color:rgba(240,238,255,0.55);
+}
+html[data-theme="aero"] .lyric-line { color:rgba(13,74,128,0.3); }
+html[data-theme="aero"] .lyric-line.active { color:#0d4a80; font-weight:800; }
+html[data-theme="aero"] .lyric-line.near { color:rgba(13,74,128,0.6); }
+html[data-theme="aero"] #lyrics-btn {
+  border-color:rgba(100,180,240,0.25);
+  background:rgba(255,255,255,0.15);
+  color:#4a90c0;
+}
+ 
+ 
 .links .link-btn { opacity:0; animation:fadeUp 0.4s var(--ease) forwards; }
 .links .link-btn:nth-child(1){animation-delay:0.22s}
 .links .link-btn:nth-child(2){animation-delay:0.28s}
@@ -502,7 +541,7 @@ html[data-theme="aero"] .footer {
 .links .link-btn:nth-child(7){animation-delay:0.58s}
 </style>
 <body>
-
+ 
 <!-- THEME TOGGLE -->
 <div class="theme-toggle" id="theme-toggle">
   <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')">
@@ -514,9 +553,9 @@ html[data-theme="aero"] .footer {
     Aero
   </button>
 </div>
-
+ 
 <div class="container">
-
+ 
   <!-- AVATAR -->
   <div class="avatar">
     <div class="avatar-inner" id="avatar-inner">
@@ -524,13 +563,13 @@ html[data-theme="aero"] .footer {
       <span id="avatar-fallback">K</span>
     </div>
   </div>
-
+ 
   <!-- PROFILE -->
   <div class="profile">
     <div class="name">Kyle</div>
     <div class="handle">koels.site</div>
   </div>
-
+ 
   <!-- DISCORD CARD -->
   <div id="discord-card" style="opacity:0;animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.32s forwards;">
     <div class="card-label">What I'm Doing</div>
@@ -548,7 +587,7 @@ html[data-theme="aero"] .footer {
         </div>
       </div>
     </div>
-
+ 
     <div id="activity-rows" style="overflow:hidden;">
       <!-- spotify -->
       <div id="spotify-row" style="display:none;padding:10px 0 2px;">
@@ -577,6 +616,22 @@ html[data-theme="aero"] .footer {
           </div>
           <span id="spotify-duration" class="time-txt" style="flex-shrink:0;min-width:28px;text-align:right;">0:00</span>
         </div>
+        <!-- lyrics button — only shown if synced lyrics exist -->
+        <button id="lyrics-btn" onclick="toggleLyrics()" style="display:none;margin-top:10px;width:100%;padding:6px 0;border-radius:6px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);font-family:inherit;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(240,238,255,0.4);cursor:pointer;transition:all 0.2s;">
+          Show Lyrics
+        </button>
+      </div>
+ 
+      <!-- LYRICS PANEL -->
+      <div id="lyrics-panel" style="display:none;padding:0 0 10px;">
+        <div id="lyrics-scroll" style="
+          max-height:200px;overflow-y:auto;padding:8px 0;
+          mask-image:linear-gradient(transparent, black 15%, black 85%, transparent);
+          -webkit-mask-image:linear-gradient(transparent, black 15%, black 85%, transparent);
+          scrollbar-width:none;
+        ">
+          <div id="lyrics-lines" style="display:flex;flex-direction:column;gap:4px;padding:20px 0;"></div>
+        </div>
       </div>
       <!-- game -->
       <div id="game-row" style="display:none;padding:10px 0 0;">
@@ -590,7 +645,7 @@ html[data-theme="aero"] .footer {
       </div>
     </div>
   </div>
-
+ 
   <!-- LINKS -->
   <div class="links">
     <a class="link-btn" href="/" target="_blank" rel="noopener">
@@ -622,17 +677,17 @@ html[data-theme="aero"] .footer {
       <span class="link-label">GitHub</span><span class="link-arrow">→</span>
     </a>
   </div>
-
+ 
   <div class="footer" style="display:flex;flex-direction:column;align-items:center;gap:5px;">
     <span>© 2026 koels.site</span>
     <span>hosted on <a href="https://github.com/koelss" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">github</a></span>
   </div>
-
+ 
 </div>
-
+ 
 <!-- FLOATING MUSIC CONTROLS (Aero only) -->
 <audio id="music-audio" src="/frutiger.mp3" preload="auto" loop></audio>
-
+ 
 <div id="music-float" aria-label="Music player">
   <!-- volume slider (expands on hover) -->
   <div id="vol-wrap">
@@ -648,13 +703,13 @@ html[data-theme="aero"] .footer {
     <div class="fab-shine"></div>
   </button>
 </div>
-
+ 
 <script is:inline>
 /* ── THEME ─────────────────────────────────── */
 const FADE_DURATION = 1200; // ms for volume fade
 let fadeInterval = null;
 let userPaused = false; // true when the user explicitly paused
-
+ 
 function fadeVolume(audio, targetVol, duration, onDone) {
   if (fadeInterval) clearInterval(fadeInterval);
   const startVol = audio.volume;
@@ -672,16 +727,16 @@ function fadeVolume(audio, targetVol, duration, onDone) {
     }
   }, stepTime);
 }
-
+ 
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('koels-theme', t);
   document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
   document.getElementById('btn-aero').classList.toggle('active', t === 'aero');
-
+ 
   const audio = document.getElementById('music-audio');
   const float = document.getElementById('music-float');
-
+ 
   if (t === 'aero') {
     float.classList.add('visible');
     const targetVol = parseFloat(document.getElementById('vol-slider').value);
@@ -704,30 +759,30 @@ function setTheme(t) {
     float.classList.remove('visible');
   }
 }
-
+ 
 // Apply before first paint
 (function(){
   const s = localStorage.getItem('koels-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', s);
 })();
-
+ 
 window.addEventListener('DOMContentLoaded', function(){
   const s = localStorage.getItem('koels-theme') || 'dark';
   document.getElementById('btn-dark').classList.toggle('active', s === 'dark');
   document.getElementById('btn-aero').classList.toggle('active', s === 'aero');
-
+ 
   const audio = document.getElementById('music-audio');
   const volSlider = document.getElementById('vol-slider');
   const float = document.getElementById('music-float');
-
+ 
   // Set initial volume
   audio.volume = parseFloat(volSlider.value);
-
+ 
   // Volume slider controls live volume
   volSlider.addEventListener('input', function() {
     if (!audio.paused) audio.volume = parseFloat(this.value);
   });
-
+ 
   // If starting in aero, autoplay
   if (s === 'aero') {
     float.classList.add('visible');
@@ -756,13 +811,13 @@ window.addEventListener('DOMContentLoaded', function(){
     });
   }
 });
-
+ 
 /* ── MUSIC ──────────────────────────────────── */
 function setFabState(playing) {
   document.getElementById('fab-play').style.display  = playing ? 'none' : '';
   document.getElementById('fab-pause').style.display = playing ? '' : 'none';
 }
-
+ 
 function toggleMusic() {
   const audio = document.getElementById('music-audio');
   const volSlider = document.getElementById('vol-slider');
@@ -781,7 +836,7 @@ function toggleMusic() {
     });
   }
 }
-
+ 
 /* ── DISCORD / LANYARD ───────────────────────── */
 (function(){
   const ID='1135328814394785903';
@@ -823,17 +878,34 @@ function toggleMusic() {
       els.label.textContent=l; els.label.style.color=st!=='offline'?c:'';
       let any=false;
       if(d.listening_to_spotify&&d.spotify){
-        els.spSong.textContent=d.spotify.song;
-        els.spArtist.textContent=d.spotify.artist;
-        // set album art
-        const spArt = document.getElementById('sp-art');
-        const artUrl = d.spotify.album_art_url;
-        if(artUrl){ spArt.src=artUrl; spArt.style.display='block'; }
-        else { spArt.style.display='none'; }
+        const song=d.spotify.song, artist=d.spotify.artist;
+        const dur=d.spotify.timestamps ? (d.spotify.timestamps.end - d.spotify.timestamps.start) : 0;
+        // only fetch lyrics if song changed
+        if(song !== currentSong || artist !== currentArtist){
+          currentSong=song; currentArtist=artist;
+          lyricsLines=[]; lyricsOpen=false;
+          document.getElementById('lyrics-panel').style.display='none';
+          document.getElementById('lyrics-btn').style.display='none';
+          document.getElementById('lyrics-btn').textContent='Show Lyrics';
+          document.getElementById('lyrics-lines').innerHTML='';
+          fetchLyrics(song, artist, Math.round(dur/1000));
+        }
+        els.spSong.textContent=song;
+        els.spArtist.textContent=artist;
+        const spArt=document.getElementById('sp-art');
+        const artUrl=d.spotify.album_art_url;
+        if(artUrl){spArt.src=artUrl;spArt.style.display='block';}
+        else{spArt.style.display='none';}
         els.spRow.style.display='block';
         if(d.spotify.timestamps)startP(d.spotify.timestamps);
         any=true;
-      } else { els.spRow.style.display='none'; stopP(); }
+      } else {
+        els.spRow.style.display='none'; stopP();
+        currentSong=''; currentArtist=''; lyricsLines=[]; lyricsOpen=false;
+        document.getElementById('lyrics-panel').style.display='none';
+        document.getElementById('lyrics-btn').style.display='none';
+        document.getElementById('lyrics-lines').innerHTML='';
+      }
       const gm=d.activities&&d.activities.find(a=>a.type===0);
       if(gm){ els.gameName.textContent=gm.name; els.gameRow.style.display='block'; any=true; } else { els.gameRow.style.display='none'; }
       els.actRows.style.paddingBottom=any?'12px':'0';
@@ -845,6 +917,96 @@ function toggleMusic() {
   }
   go(); setInterval(go,3000);
 })();
+ 
+/* ── LYRICS ─────────────────────────────────── */
+let lyricsLines = [];
+let lyricsOpen = false;
+let currentSong = '';
+let currentArtist = '';
+let lyricsInterval = null;
+ 
+async function fetchLyrics(song, artist, duration) {
+  try {
+    const url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(song)}&artist_name=${encodeURIComponent(artist)}&duration=${duration}`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.syncedLyrics) return;
+    // Parse LRC format: [mm:ss.xx] line
+    lyricsLines = data.syncedLyrics
+      .split('\n')
+      .map(line => {
+        const m = line.match(/^\[(\d+):(\d+\.\d+)\](.*)/);
+        if (!m) return null;
+        const secs = parseInt(m[1]) * 60 + parseFloat(m[2]);
+        return { t: secs, text: m[3].trim() };
+      })
+      .filter(l => l && l.text.length > 0);
+    if (lyricsLines.length > 0) {
+      document.getElementById('lyrics-btn').style.display = 'block';
+      renderLyrics();
+      startLyricsSync();
+    }
+  } catch(e) {}
+}
+ 
+function renderLyrics() {
+  const container = document.getElementById('lyrics-lines');
+  container.innerHTML = '';
+  lyricsLines.forEach((line, i) => {
+    const el = document.createElement('div');
+    el.className = 'lyric-line';
+    el.id = `lyric-${i}`;
+    el.textContent = line.text;
+    container.appendChild(el);
+  });
+}
+ 
+function startLyricsSync() {
+  if (lyricsInterval) clearInterval(lyricsInterval);
+  lyricsInterval = setInterval(syncLyrics, 500);
+}
+ 
+function syncLyrics() {
+  if (!lyricsOpen || lyricsLines.length === 0) return;
+  const elapsedEl = document.getElementById('spotify-elapsed');
+  const parts = elapsedEl.textContent.split(':');
+  if (parts.length < 2) return;
+  const currentSec = parseInt(parts[0]) * 60 + parseInt(parts[1]);
+ 
+  let activeIdx = -1;
+  for (let i = lyricsLines.length - 1; i >= 0; i--) {
+    if (currentSec >= lyricsLines[i].t) { activeIdx = i; break; }
+  }
+ 
+  lyricsLines.forEach((_, i) => {
+    const el = document.getElementById(`lyric-${i}`);
+    if (!el) return;
+    el.classList.remove('active','near');
+    if (i === activeIdx) el.classList.add('active');
+    else if (i === activeIdx - 1 || i === activeIdx + 1) el.classList.add('near');
+  });
+ 
+  // Scroll active line into view
+  if (activeIdx >= 0) {
+    const activeEl = document.getElementById(`lyric-${activeIdx}`);
+    const scroll = document.getElementById('lyrics-scroll');
+    if (activeEl && scroll) {
+      const elTop = activeEl.offsetTop;
+      const scrollMid = scroll.clientHeight / 2;
+      scroll.scrollTo({ top: elTop - scrollMid, behavior: 'smooth' });
+    }
+  }
+}
+ 
+function toggleLyrics() {
+  lyricsOpen = !lyricsOpen;
+  const panel = document.getElementById('lyrics-panel');
+  const btn = document.getElementById('lyrics-btn');
+  panel.style.display = lyricsOpen ? 'block' : 'none';
+  btn.textContent = lyricsOpen ? 'Hide Lyrics' : 'Show Lyrics';
+  if (lyricsOpen) syncLyrics();
+}
 </script>
 </body>
 </html>
