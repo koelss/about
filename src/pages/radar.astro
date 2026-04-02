@@ -305,18 +305,16 @@ map.createPane('radarPane');
 map.getPane('radarPane').style.zIndex = 300;
 map.getPane('radarPane').classList.add('radar-pane');
 
-// ── RADAR via Iowa State IEM NEXRAD ───────────────────────────────────────
-const IEM_TS   = ['900913-m50m','900913-m45m','900913-m40m','900913-m35m',
-                   '900913-m30m','900913-m25m','900913-m20m','900913-m15m',
-                   '900913-m10m','900913-m05m','900913'];
-const IEM_MINS = [50,45,40,35,30,25,20,15,10,5,0];
-const FRAME_MS = 650;   // ms per frame during playback
-const HOLD_MS  = 1600;  // ms to hold on last frame before looping
+// ── RADAR — RainViewer (free, global, no API key) ─────────────────────────
+const FRAME_MS = 650;
+const HOLD_MS  = 1600;
 
-let frames     = [];
+let frames     = [];  // { path, time (unix), layer }
 let currentIdx = 0;
 let playing    = false;
 let playTimer  = null;
+let rvHost     = '';
+let activeLayer = null;
 
 function setStatus(msg, show) {
   const el = document.getElementById('radar-status');
@@ -324,54 +322,66 @@ function setStatus(msg, show) {
   el.classList.toggle('show', !!show);
 }
 
-function buildFrames() {
-  frames.forEach(f => { try { map.removeLayer(f.layer); } catch(e){} });
-  frames = IEM_TS.map((ts, i) => ({
-    ts, minsAgo: IEM_MINS[i],
-    layer: L.tileLayer(
-      `https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-${ts}/{z}/{x}/{y}.png`,
-      { opacity: 0, pane: 'radarPane', maxZoom: 18 }
-    )
-  }));
-  buildTicks();
-}
+async function loadRainViewer() {
+  try {
+    setStatus('Loading radar…', true);
+    const data = await (await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();
+    rvHost = data.host;
+    const newFrames = [...(data.radar?.past||[]), ...(data.radar?.nowcast||[])];
 
-// Add ALL layers to the map at opacity 0 right away so tiles start downloading
-function preloadAll() {
-  setStatus('Loading radar…', true);
-  frames.forEach(f => f.layer.addTo(map));
-  // Show the most recent frame once its tiles are ready
-  let shown = false;
-  frames[frames.length - 1].layer.once('load', () => {
-    if (!shown) { shown = true; showFrame(frames.length - 1); setStatus('', false); startPlay(); }
-  });
-  // Fallback: show + play after 5s even if load event never fires
-  setTimeout(() => {
-    if (!shown) { shown = true; showFrame(frames.length - 1); setStatus('', false); startPlay(); }
-  }, 5000);
+    // Remove old layers
+    frames.forEach(f => { try { map.removeLayer(f.layer); } catch(e){} });
+
+    const sz = window.devicePixelRatio >= 2 ? 512 : 256;
+    frames = newFrames.map(f => ({
+      path: f.path,
+      time: f.time,
+      layer: L.tileLayer(
+        data.host + f.path + '/' + sz + '/{z}/{x}/{y}/2/1_1.png',
+        { opacity: 0, pane: 'radarPane', maxNativeZoom: 7, maxZoom: 19 }
+      )
+    }));
+
+    // Add all at opacity 0 to preload tiles
+    frames.forEach(f => f.layer.addTo(map));
+
+    buildTicks();
+
+    // Show latest frame once loaded, then start playing
+    let shown = false;
+    const last = frames[frames.length - 1];
+    last.layer.once('load', () => {
+      if (!shown) { shown = true; showFrame(frames.length - 1); setStatus('', false); startPlay(); }
+    });
+    setTimeout(() => {
+      if (!shown) { shown = true; showFrame(frames.length - 1); setStatus('', false); startPlay(); }
+    }, 5000);
+
+  } catch(e) {
+    console.error('RainViewer load error:', e);
+    setStatus('Radar unavailable', true);
+  }
 }
 
 function showFrame(idx) {
-  // Hide previous IEM frame
-  if (frames[currentIdx]) frames[currentIdx].layer.setOpacity(0);
-  currentIdx = Math.max(0, Math.min(idx, frames.length - 1));
-  frames[currentIdx].layer.setOpacity(0.8);
-
-  // Always show the matching RainViewer frame at the same time (global coverage underneath)
-  showRVFrameOnly(currentIdx);
-
+  if (!frames.length) return;
+  if (activeLayer) activeLayer.setOpacity(0);
+  currentIdx  = Math.max(0, Math.min(idx, frames.length - 1));
+  activeLayer = frames[currentIdx].layer;
+  activeLayer.setOpacity(0.8);
   updateUI();
 }
 
 function updateUI() {
+  if (!frames.length) return;
   const f   = frames[currentIdx];
-  const now = new Date();
-  const t   = new Date(now.getTime() - f.minsAgo * 60000);
+  const t   = new Date(f.time * 1000);
   const h   = t.getHours(), m = t.getMinutes();
   const hh  = ((h % 12) || 12);
   const mm  = m.toString().padStart(2, '0');
   const ap  = h < 12 ? 'AM' : 'PM';
-  const ago = f.minsAgo === 0 ? 'LIVE · NOW' : `${f.minsAgo}m ago`;
+  const diffMin = Math.round((Date.now() - t) / 60000);
+  const ago = diffMin <= 1 ? 'LIVE · NOW' : `${diffMin}m ago`;
 
   document.getElementById('time-display').innerHTML =
     `<span class="t-time">${hh}:${mm} ${ap}</span>` +
@@ -380,125 +390,76 @@ function updateUI() {
     `<span class="t-sep"> · </span>` +
     `<span class="t-pos">${currentIdx + 1}/${frames.length}</span>`;
 
-  const pct = (currentIdx / (frames.length - 1)) * 100;
+  const pct = frames.length > 1 ? (currentIdx / (frames.length - 1)) * 100 : 100;
   document.getElementById('scrubber-fill').style.width = pct + '%';
   document.getElementById('scrubber-thumb').style.left  = pct + '%';
 }
 
 function buildTicks() {
-  const picks = [0, 2, 5, 7, frames.length - 1];
-  document.getElementById('scrubber-ticks').innerHTML = picks.map(i => {
-    const f = frames[i];
-    const label = f.minsAgo === 0 ? 'NOW' : `-${f.minsAgo}m`;
-    return `<span class="tick-label${f.minsAgo === 0 ? ' is-now' : ''}">${label}</span>`;
+  if (!frames.length) return;
+  const picks = [0, Math.floor(frames.length * 0.25), Math.floor(frames.length * 0.5),
+                 Math.floor(frames.length * 0.75), frames.length - 1];
+  document.getElementById('scrubber-ticks').innerHTML = [...new Set(picks)].map(i => {
+    const diffMin = Math.round((Date.now() - frames[i].time * 1000) / 60000);
+    const label   = diffMin <= 1 ? 'NOW' : `-${diffMin}m`;
+    return `<span class="tick-label${diffMin <= 1 ? ' is-now' : ''}">${label}</span>`;
   }).join('');
 }
 
-// ── GLOBAL RADAR (RainViewer — worldwide coverage) ───────────────────────
-// RainViewer runs ALWAYS alongside IEM. IEM provides hi-res NEXRAD over the US;
-// RainViewer fills in the rest of the world. Both animate in sync.
-let rvApiData   = null;
-let rvFrames    = [];
-let rvLayers    = {};
-let rvActive    = null;
-
-async function loadRainViewer() {
-  try {
-    const data = await (await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();
-    rvApiData = data;
-    rvFrames  = [...(data.radar?.past||[]), ...(data.radar?.nowcast||[])];
-    // Rebuild layers
-    Object.values(rvLayers).forEach(l => { try { map.removeLayer(l); } catch(e){} });
-    rvLayers = {};
-    const sz = window.devicePixelRatio >= 2 ? 512 : 256;
-    rvFrames.forEach(f => {
-      rvLayers[f.path] = L.tileLayer(
-        data.host + f.path + '/' + sz + '/{z}/{x}/{y}/2/1_1.png',
-        { opacity:0, pane:'radarPane', maxNativeZoom:7, maxZoom:19 }
-      );
-    });
-    // Add all to map at opacity 0 so they preload
-    Object.values(rvLayers).forEach(l => l.addTo(map));
-  } catch(e) { console.error('RainViewer load error:', e); }
+// ── PLAY / PAUSE ──────────────────────────────────────────────────────────
+function setPlayIcon(isPlaying) {
+  document.getElementById('play-icon').style.display  = isPlaying ? 'none' : '';
+  document.getElementById('pause-icon').style.display = isPlaying ? '' : 'none';
 }
 
-// Show the RainViewer frame that best matches the given IEM frame index.
-// IEM has 11 frames spanning 0–50 mins ago; RainViewer typically has ~13 past frames
-// at 10-min intervals. We map by proportional position so they stay in sync.
-function showRVFrameOnly(iemIdx) {
-  if (!rvFrames.length) return;
-  // Map IEM index (0=oldest, last=live) → RainViewer index proportionally
-  const rvIdx = Math.round((iemIdx / (frames.length - 1)) * (rvFrames.length - 1));
-  const clampedIdx = Math.max(0, Math.min(rvIdx, rvFrames.length - 1));
-  if (rvActive) rvActive.setOpacity(0);
-  const layer = rvLayers[rvFrames[clampedIdx].path];
-  if (layer) {
-    layer.setOpacity(0.75);
-    rvActive = layer;
+function scheduleNext() {
+  if (!playing) return;
+  if (currentIdx >= frames.length - 1) {
+    // Hold on last frame then loop back
+    playTimer = setTimeout(() => {
+      if (!playing) return;
+      showFrame(0);
+      scheduleNext();
+    }, HOLD_MS);
+  } else {
+    playTimer = setTimeout(() => {
+      if (!playing) return;
+      showFrame(currentIdx + 1);
+      scheduleNext();
+    }, FRAME_MS);
   }
+}
+
+function startPlay() {
+  if (playing) return;
+  if (!frames.length) return;
+  playing = true;
+  setPlayIcon(true);
+  if (currentIdx >= frames.length - 1) showFrame(0);
+  scheduleNext();
+}
+
+function stopPlay() {
+  playing = false;
+  clearTimeout(playTimer);
+  playTimer = null;
+  setPlayIcon(false);
+}
+
+function togglePlay() {
+  if (playing) stopPlay();
+  else startPlay();
 }
 
 loadRainViewer();
 setInterval(loadRainViewer, 300000);
 
-// ── PLAY / PAUSE ──────────────────────────────────────────────────────────
-function animStep() {
-  if (!playing) return;
-  const next = currentIdx + 1;
-  if (next >= frames.length) {
-    // Hold on last frame, then loop back to start
-    playTimer = setTimeout(() => {
-      if (!playing) return;
-      showFrame(0);
-      playTimer = setTimeout(animStep, FRAME_MS);
-    }, HOLD_MS);
-  } else {
-    showFrame(next);
-    playTimer = setTimeout(animStep, FRAME_MS);
-  }
-}
-
-function showFrame_or_RV(idx) {
-  showFrame(idx);
-}
-
-function startPlay() {
-  if (playing) return;
-  playing = true;
-  document.getElementById('play-icon').style.display  = 'none';
-  document.getElementById('pause-icon').style.display = '';
-  // Resume from current position — if already at last frame, restart from beginning
-  if (currentIdx >= frames.length - 1) {
-    showFrame(0);
-  }
-  playTimer = setTimeout(animStep, FRAME_MS);
-}
-
-function togglePlay() {
-  if (playing) {
-    playing = false;
-    clearTimeout(playTimer); playTimer = null;
-    document.getElementById('play-icon').style.display  = '';
-    document.getElementById('pause-icon').style.display = 'none';
-  } else {
-    startPlay();
-  }
-}
-
-buildFrames();
-preloadAll();
-setInterval(() => { buildFrames(); preloadAll(); }, 300000);
-
 // ── SCRUBBER ──────────────────────────────────────────────────────────────
 function scrubTo(clientX) {
   const rect = document.getElementById('scrubber-track').getBoundingClientRect();
   const pct  = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-  if (playing) {
-    playing = false; clearTimeout(playTimer); playTimer = null;
-    document.getElementById('play-icon').style.display  = '';
-    document.getElementById('pause-icon').style.display = 'none';
-  }
-  showFrame(Math.round(pct * (frames.length - 1)));
+  if (playing) stopPlay();
+  if (frames.length) showFrame(Math.round(pct * (frames.length - 1)));
 }
 
 let dragging = false;
