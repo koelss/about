@@ -45,13 +45,13 @@ html[data-theme="aero"] {
   --toggle-inactive: #64a8c8;
   --toggle-inactive-hover: #1a5a8a;
 }
- 
+
 /* =====================================================
    RESET
    ===================================================== */
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior:smooth; font-size:17px; }
- 
+
 /* =====================================================
    BODY
    ===================================================== */
@@ -60,7 +60,7 @@ body {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   padding:40px 20px;
 }
- 
+
 html[data-theme="dark"] body {
   font-family:"Inter",system-ui,sans-serif;
   background:#03030a; color:#f0eeff;
@@ -78,7 +78,7 @@ html[data-theme="dark"] body::after {
   background:radial-gradient(ellipse,rgba(108,92,231,0.12) 0%,transparent 70%);
   pointer-events:none; z-index:0;
 }
- 
+
 html[data-theme="aero"] body {
   font-family:"Nunito",system-ui,sans-serif;
   /* classic Frutiger Aero sky */
@@ -106,7 +106,7 @@ html[data-theme="aero"] body::after {
     radial-gradient(circle 120px at 52% 92%, rgba(200,240,255,0.3) 0%, transparent 65%),
     radial-gradient(circle  55px at 78% 52%, rgba(255,255,255,0.3) 0%, transparent 60%);
 }
- 
+
 /* =====================================================
    LAYOUT
    ===================================================== */
@@ -117,7 +117,7 @@ html[data-theme="aero"] body::after {
 }
 html[data-theme="dark"] .container { gap:24px; }
 html[data-theme="aero"] .container { gap:14px; }
- 
+
 /* =====================================================
    THEME TOGGLE
    ===================================================== */
@@ -131,7 +131,7 @@ html[data-theme="aero"] .container { gap:14px; }
 }
 html[data-theme="dark"] .theme-toggle { box-shadow:0 2px 14px rgba(0,0,0,0.45); }
 html[data-theme="aero"] .theme-toggle { box-shadow:0 4px 20px rgba(80,160,230,0.2), inset 0 1px 0 #fff; }
- 
+
 .theme-btn {
   display:flex; align-items:center; gap:5px;
   padding:5px 13px; border-radius:999px;
@@ -149,7 +149,7 @@ html[data-theme="aero"] .theme-btn.active {
   color:#fff;
   box-shadow:0 3px 12px rgba(30,100,210,0.35), inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -1px 0 rgba(0,80,160,0.2);
 }
- 
+
 /* =====================================================
    AVATAR — DARK
    ===================================================== */
@@ -169,7 +169,7 @@ html[data-theme="dark"] .avatar-inner {
   display:flex; align-items:center; justify-content:center;
   font-family:"JetBrains Mono",monospace; font-size:1.2rem; font-weight:700; color:#a29bfe;
 }
- 
+
 /* =====================================================
    AVATAR — AERO
    ===================================================== */
@@ -198,16 +198,16 @@ html[data-theme="aero"] .avatar-inner {
   display:flex; align-items:center; justify-content:center;
   font-family:"Nunito",sans-serif; font-size:1.3rem; font-weight:800; color:#1a6baa;
 }
- 
+
 @keyframes spin { to { transform:rotate(360deg); } }
- 
+
 /* =====================================================
    PROFILE
    ===================================================== */
 .profile { text-align:center; display:flex; flex-direction:column; }
 html[data-theme="dark"] .profile { gap:6px; }
 html[data-theme="aero"] .profile { gap:3px; }
- 
+
 html[data-theme="dark"] .name {
   font-family:"JetBrains Mono",monospace; font-size:1.1rem; font-weight:700;
   letter-spacing:0.05em; color:#fff;
@@ -225,7 +225,7 @@ html[data-theme="aero"] .handle {
   font-family:"Nunito",sans-serif; font-size:0.75rem; font-weight:600;
   color:#4a90c0; letter-spacing:0.06em; text-transform:uppercase;
 }
- 
+
 /* =====================================================
    DISCORD CARD — DARK
    ===================================================== */
@@ -262,7 +262,7 @@ html[data-theme="dark"] #spotify-artist { font-family:"JetBrains Mono",monospace
 html[data-theme="dark"] .time-txt { font-family:"JetBrains Mono",monospace; font-size:0.55rem; color:rgba(240,238,255,0.4); }
 html[data-theme="dark"] #game-name { font-family:"JetBrains Mono",monospace; font-size:0.65rem; color:#fff; }
 html[data-theme="dark"] .game-sub { font-family:"JetBrains Mono",monospace; font-size:0.6rem; color:rgba(240,238,255,0.4); }
- 
+
 /* =====================================================
    DISCORD CARD — AERO
    ===================================================== */
@@ -312,14 +312,14 @@ html[data-theme="aero"] #spotify-artist { font-family:"Nunito",sans-serif; font-
 html[data-theme="aero"] .time-txt { font-family:"Nunito",sans-serif; font-size:0.55rem; font-weight:600; color:#5a9dc0; }
 html[data-theme="aero"] #game-name { font-family:"Nunito",sans-serif; font-size:0.68rem; font-weight:700; color:#0d4a80; }
 html[data-theme="aero"] .game-sub { font-family:"Nunito",sans-serif; font-size:0.62rem; font-weight:600; color:#5a9dc0; }
- 
+
 /* =====================================================
    LINK BUTTONS — DARK
    ===================================================== */
 .links { width:100%; display:flex; flex-direction:column; }
 html[data-theme="dark"] .links { gap:10px; }
 html[data-theme="aero"] .links { gap:9px; }
- 
+
 html[data-theme="dark"] .link-btn {
   display:flex; align-items:center; gap:14px;
   padding:14px 18px; border-radius:10px;
@@ -341,7 +341,7 @@ html[data-theme="dark"] .link-btn:hover::before { transform:translateX(100%); }
 html[data-theme="dark"] .link-btn:active { transform:translateY(0); }
 html[data-theme="dark"] .link-arrow { font-size:0.65rem; color:rgba(240,238,255,0.4); transition:transform 0.2s,color 0.2s; }
 html[data-theme="dark"] .link-btn:hover .link-arrow { transform:translateX(2px); color:rgba(240,238,255,0.68); }
- 
+
 /* =====================================================
    LINK BUTTONS — AERO (glossy pill)
    ===================================================== */
@@ -382,17 +382,17 @@ html[data-theme="aero"] .link-btn:hover::after { transform:translateX(100%); }
 html[data-theme="aero"] .link-btn:active { transform:translateY(0); }
 html[data-theme="aero"] .link-arrow { font-size:0.72rem; color:#5ba8d8; transition:transform 0.18s,color 0.18s; }
 html[data-theme="aero"] .link-btn:hover .link-arrow { transform:translateX(3px); color:#1a6baa; }
- 
+
 /* shared icon */
 .link-icon { width:20px; height:20px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
 .link-icon svg { width:18px; height:18px; fill:currentColor; }
 .link-label { flex:1; }
- 
+
 /* =====================================================
    CD SPIN (shared keyframe for spotify + float disc)
    ===================================================== */
 @keyframes disc-spin { to { transform:rotate(360deg); } }
- 
+
 /* =====================================================
    FLOATING MUSIC CONTROLS (Aero only)
    ===================================================== */
@@ -407,7 +407,7 @@ html[data-theme="aero"] .link-btn:hover .link-arrow { transform:translateX(3px);
   opacity:1; pointer-events:auto;
   transform:translateY(0);
 }
- 
+
 /* ---- volume wrap ---- */
 #vol-wrap {
   display:flex; align-items:center; gap:6px;
@@ -451,7 +451,7 @@ html[data-theme="aero"] .link-btn:hover .link-arrow { transform:translateX(3px);
   box-shadow:0 1px 4px rgba(20,100,220,0.4);
   cursor:pointer;
 }
- 
+
 /* ---- fab play/pause button ---- */
 #music-fab {
   width:48px; height:48px; border-radius:50%; flex-shrink:0;
@@ -478,7 +478,7 @@ html[data-theme="aero"] .link-btn:hover .link-arrow { transform:translateX(3px);
 }
 #music-fab:active { transform:scale(0.95); }
 #music-fab svg { width:16px; height:16px; fill:#fff; position:relative; z-index:1; }
- 
+
 /* =====================================================
    FOOTER
    ===================================================== */
@@ -490,7 +490,7 @@ html[data-theme="aero"] .footer {
   font-family:"Nunito",sans-serif; font-size:0.65rem; font-weight:600;
   letter-spacing:0.04em; color:#5a9dc0; opacity:0.9;
 }
- 
+
 /* =====================================================
    ENTRANCE ANIMATIONS
    ===================================================== */
@@ -506,7 +506,7 @@ html[data-theme="aero"] .footer {
    LYRICS
    ===================================================== */
 #lyrics-scroll::-webkit-scrollbar { display:none; }
- 
+
 .lyric-line {
   font-size:0.78rem; line-height:1.5; padding:2px 0;
   color:rgba(240,238,255,0.22);
@@ -529,8 +529,8 @@ html[data-theme="aero"] #lyrics-btn {
   background:rgba(255,255,255,0.15);
   color:#4a90c0;
 }
- 
- 
+
+
 .links .link-btn { opacity:0; animation:fadeUp 0.4s var(--ease) forwards; }
 .links .link-btn:nth-child(1){animation-delay:0.22s}
 .links .link-btn:nth-child(2){animation-delay:0.28s}
@@ -540,8 +540,9 @@ html[data-theme="aero"] #lyrics-btn {
 .links .link-btn:nth-child(6){animation-delay:0.52s}
 .links .link-btn:nth-child(7){animation-delay:0.58s}
 </style>
+</head>
 <body>
- 
+
 <!-- THEME TOGGLE -->
 <div class="theme-toggle" id="theme-toggle">
   <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')">
@@ -553,9 +554,9 @@ html[data-theme="aero"] #lyrics-btn {
     Aero
   </button>
 </div>
- 
+
 <div class="container">
- 
+
   <!-- AVATAR -->
   <div class="avatar">
     <div class="avatar-inner" id="avatar-inner">
@@ -563,13 +564,13 @@ html[data-theme="aero"] #lyrics-btn {
       <span id="avatar-fallback">K</span>
     </div>
   </div>
- 
+
   <!-- PROFILE -->
   <div class="profile">
     <div class="name">Kyle</div>
     <div class="handle">koels.site</div>
   </div>
- 
+
   <!-- DISCORD CARD -->
   <div id="discord-card" style="opacity:0;animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) 0.32s forwards;">
     <div class="card-label">What I'm Doing</div>
@@ -587,7 +588,7 @@ html[data-theme="aero"] #lyrics-btn {
         </div>
       </div>
     </div>
- 
+
     <div id="activity-rows" style="overflow:hidden;">
       <!-- spotify -->
       <div id="spotify-row" style="display:none;padding:10px 0 2px;">
@@ -621,7 +622,7 @@ html[data-theme="aero"] #lyrics-btn {
           Show Lyrics
         </button>
       </div>
- 
+
       <!-- LYRICS PANEL -->
       <div id="lyrics-panel" style="display:none;padding:0 0 10px;">
         <div id="lyrics-scroll" style="
@@ -645,7 +646,7 @@ html[data-theme="aero"] #lyrics-btn {
       </div>
     </div>
   </div>
- 
+
   <!-- LINKS -->
   <div class="links">
     <a class="link-btn" href="/" target="_blank" rel="noopener">
@@ -677,17 +678,17 @@ html[data-theme="aero"] #lyrics-btn {
       <span class="link-label">GitHub</span><span class="link-arrow">→</span>
     </a>
   </div>
- 
+
   <div class="footer" style="display:flex;flex-direction:column;align-items:center;gap:5px;">
     <span>© 2026 koels.site</span>
     <span>hosted on <a href="https://github.com/koelss" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">github</a></span>
   </div>
- 
+
 </div>
- 
+
 <!-- FLOATING MUSIC CONTROLS (Aero only) -->
 <audio id="music-audio" src="/frutiger.mp3" preload="auto" loop></audio>
- 
+
 <div id="music-float" aria-label="Music player">
   <!-- volume slider (expands on hover) -->
   <div id="vol-wrap">
@@ -703,13 +704,13 @@ html[data-theme="aero"] #lyrics-btn {
     <div class="fab-shine"></div>
   </button>
 </div>
- 
+
 <script is:inline>
 /* ── THEME ─────────────────────────────────── */
 const FADE_DURATION = 1200; // ms for volume fade
 let fadeInterval = null;
 let userPaused = false; // true when the user explicitly paused
- 
+
 function fadeVolume(audio, targetVol, duration, onDone) {
   if (fadeInterval) clearInterval(fadeInterval);
   const startVol = audio.volume;
@@ -727,16 +728,16 @@ function fadeVolume(audio, targetVol, duration, onDone) {
     }
   }, stepTime);
 }
- 
+
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('koels-theme', t);
   document.getElementById('btn-dark').classList.toggle('active', t === 'dark');
   document.getElementById('btn-aero').classList.toggle('active', t === 'aero');
- 
+
   const audio = document.getElementById('music-audio');
   const float = document.getElementById('music-float');
- 
+
   if (t === 'aero') {
     float.classList.add('visible');
     const targetVol = parseFloat(document.getElementById('vol-slider').value);
@@ -759,30 +760,30 @@ function setTheme(t) {
     float.classList.remove('visible');
   }
 }
- 
+
 // Apply before first paint
 (function(){
   const s = localStorage.getItem('koels-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', s);
 })();
- 
+
 window.addEventListener('DOMContentLoaded', function(){
   const s = localStorage.getItem('koels-theme') || 'dark';
   document.getElementById('btn-dark').classList.toggle('active', s === 'dark');
   document.getElementById('btn-aero').classList.toggle('active', s === 'aero');
- 
+
   const audio = document.getElementById('music-audio');
   const volSlider = document.getElementById('vol-slider');
   const float = document.getElementById('music-float');
- 
+
   // Set initial volume
   audio.volume = parseFloat(volSlider.value);
- 
+
   // Volume slider controls live volume
   volSlider.addEventListener('input', function() {
     if (!audio.paused) audio.volume = parseFloat(this.value);
   });
- 
+
   // If starting in aero, autoplay
   if (s === 'aero') {
     float.classList.add('visible');
@@ -811,13 +812,13 @@ window.addEventListener('DOMContentLoaded', function(){
     });
   }
 });
- 
+
 /* ── MUSIC ──────────────────────────────────── */
 function setFabState(playing) {
   document.getElementById('fab-play').style.display  = playing ? 'none' : '';
   document.getElementById('fab-pause').style.display = playing ? '' : 'none';
 }
- 
+
 function toggleMusic() {
   const audio = document.getElementById('music-audio');
   const volSlider = document.getElementById('vol-slider');
@@ -836,7 +837,7 @@ function toggleMusic() {
     });
   }
 }
- 
+
 /* ── DISCORD / LANYARD ───────────────────────── */
 (function(){
   const ID='1135328814394785903';
@@ -917,14 +918,14 @@ function toggleMusic() {
   }
   go(); setInterval(go,3000);
 })();
- 
+
 /* ── LYRICS ─────────────────────────────────── */
 let lyricsLines = [];
 let lyricsOpen = false;
 let currentSong = '';
 let currentArtist = '';
 let lyricsInterval = null;
- 
+
 async function fetchLyrics(song, artist, duration) {
   try {
     const url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(song)}&artist_name=${encodeURIComponent(artist)}&duration=${duration}`;
@@ -949,7 +950,7 @@ async function fetchLyrics(song, artist, duration) {
     }
   } catch(e) {}
 }
- 
+
 function renderLyrics() {
   const container = document.getElementById('lyrics-lines');
   container.innerHTML = '';
@@ -961,24 +962,24 @@ function renderLyrics() {
     container.appendChild(el);
   });
 }
- 
+
 function startLyricsSync() {
   if (lyricsInterval) clearInterval(lyricsInterval);
   lyricsInterval = setInterval(syncLyrics, 500);
 }
- 
+
 function syncLyrics() {
   if (!lyricsOpen || lyricsLines.length === 0) return;
   const elapsedEl = document.getElementById('spotify-elapsed');
   const parts = elapsedEl.textContent.split(':');
   if (parts.length < 2) return;
   const currentSec = parseInt(parts[0]) * 60 + parseInt(parts[1]);
- 
+
   let activeIdx = -1;
   for (let i = lyricsLines.length - 1; i >= 0; i--) {
     if (currentSec >= lyricsLines[i].t) { activeIdx = i; break; }
   }
- 
+
   lyricsLines.forEach((_, i) => {
     const el = document.getElementById(`lyric-${i}`);
     if (!el) return;
@@ -986,7 +987,7 @@ function syncLyrics() {
     if (i === activeIdx) el.classList.add('active');
     else if (i === activeIdx - 1 || i === activeIdx + 1) el.classList.add('near');
   });
- 
+
   // Scroll active line into view
   if (activeIdx >= 0) {
     const activeEl = document.getElementById(`lyric-${activeIdx}`);
@@ -998,7 +999,7 @@ function syncLyrics() {
     }
   }
 }
- 
+
 function toggleLyrics() {
   lyricsOpen = !lyricsOpen;
   const panel = document.getElementById('lyrics-panel');
