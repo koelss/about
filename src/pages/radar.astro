@@ -373,26 +373,24 @@ body { background:#03030a; color:#f0eeff; }
 /* ── MOBILE ─────────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
 
-  /* Header — tighter */
+  /* Header — tighter, keep beta badge */
   #header { height:48px; padding:0 12px; }
-  .back-btn span { display:none; }  /* hide "Back" text, keep arrow */
   .hdiv { display:none; }
   .radar-logo-sub { display:none; }
-  .beta-badge { display:none; }
   #last-updated { display:none; }
-  .radar-logo-main { font-size:0.8rem; }
+  .radar-logo-main { font-size:0.78rem; }
   .radar-logo-icon { width:24px; height:24px; }
 
-  /* Alert pill — make it tappable, opens panel */
+  /* Alert pill */
   .alert-pill {
-    padding:6px 12px; font-size:0.6rem; cursor:pointer;
+    padding:6px 10px; font-size:0.58rem; cursor:pointer;
     -webkit-tap-highlight-color:transparent;
   }
 
   /* Panel — slides up from bottom, full width */
   #panel {
     top:auto; bottom:0; left:0; right:0; width:100%;
-    height:72vh; border-left:none; border-top:1px solid rgba(108,92,231,0.2);
+    height:68vh; border-left:none; border-top:1px solid rgba(108,92,231,0.2);
     border-radius:16px 16px 0 0;
     transform:translateY(100%);
     transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
@@ -400,57 +398,53 @@ body { background:#03030a; color:#f0eeff; }
   }
   #panel.open { transform:translateY(0); }
 
-  /* Drag handle on top of panel */
+  /* Drag handle */
   .panel-header::before {
-    content:'';
-    display:block; position:absolute; top:8px; left:50%;
+    content:''; display:block; position:absolute; top:8px; left:50%;
     transform:translateX(-50%);
     width:36px; height:4px; border-radius:2px;
     background:rgba(255,255,255,0.15);
   }
   .panel-header { position:relative; padding-top:20px; }
 
-  /* Hide the side toggle tab on mobile */
+  /* Hide side toggle tab */
   #panel-toggle { display:none !important; }
 
-  /* Panel open → shift timeline up */
-  #panel.open ~ * #timeline,
-  body.panel-open #timeline { bottom: calc(72vh + 12px); }
-
-  /* Legend — compact, bottom left, smaller */
-  #legend {
-    bottom:80px; left:12px;
-    padding:7px 12px; gap:8px; border-radius:8px;
-  }
-  .legend-title { font-size:0.55rem; }
-  .legend-items { gap:8px; }
-  .legend-item { gap:4px; }
-  .legend-dot { width:7px; height:7px; }
-  .legend-label { font-size:0.55rem; }
-
-  /* Timeline — pinned to bottom, narrower padding */
+  /* Timeline — full width, above bottom edge, no left:50% */
   #timeline {
-    bottom:12px; padding:10px 14px 12px;
+    left:12px; right:12px; width:auto;
+    transform:none;
+    bottom:12px;
+    padding:10px 14px 12px;
     border-radius:12px;
-    width:calc(100vw - 24px);
   }
   .tl-row1 { margin-bottom:8px; gap:10px; }
   #play-btn { width:28px; height:28px; }
-  #time-display { font-size:0.6rem; }
+  #time-display { font-size:0.58rem; }
+  .tick-label { font-size:0.42rem; }
 
-  /* Zoom controls — move up so they're not behind timeline */
-  .leaflet-control-zoom {
-    margin-bottom:100px !important;
+  /* Legend — sits above timeline (timeline ~80px tall) */
+  #legend {
+    bottom:108px; left:12px; right:auto;
+    padding:7px 12px; gap:8px; border-radius:8px;
   }
+  .legend-title { font-size:0.52rem; }
+  .legend-items { gap:8px; }
+  .legend-item { gap:4px; }
+  .legend-dot { width:7px; height:7px; }
+  .legend-label { font-size:0.52rem; }
 
-  /* Beta modal — full width on small screens */
+  /* Zoom controls above timeline */
+  .leaflet-control-zoom { margin-bottom:110px !important; margin-right:12px !important; }
+
+  /* Beta modal */
   #beta-modal { padding:24px 20px; border-radius:12px; }
   .beta-modal-title { font-size:0.85rem; }
 
-  /* Backdrop to close panel on mobile */
+  /* Backdrop */
   #panel-backdrop {
     display:none; position:fixed; inset:0; z-index:899;
-    background:rgba(0,0,0,0.4); backdrop-filter:blur(2px);
+    background:rgba(0,0,0,0.5);
   }
   #panel.open ~ #panel-backdrop { display:block; }
 }
@@ -598,6 +592,10 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution: '© OpenStreetMap contributors © CARTO',
   subdomains: 'abcd', maxZoom: 19
 }).addTo(map);
+
+// Force map to recalculate its size — fixes black map on mobile
+setTimeout(() => map.invalidateSize(), 100);
+window.addEventListener('resize', () => map.invalidateSize());
 
 // Custom pane for radar tiles so they are NOT affected by the base tile CSS filter
 map.createPane('radarPane');
