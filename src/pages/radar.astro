@@ -261,13 +261,21 @@ body { background:#03030a; color:#f0eeff; }
       You may encounter bugs or incomplete behavior.
     </div>
     <div class="beta-modal-footer">
-      <button class="beta-dismiss-btn" onclick="dismissBeta()">Got it</button>
+      <button class="beta-dismiss-btn" onclick="
+        if(document.getElementById('beta-no-show').checked){
+          try{localStorage.setItem('beta_dismissed','1')}catch(e){}
+        }
+        document.getElementById('beta-overlay').style.display='none';
+      ">Got it</button>
       <label class="beta-dont-show">
         <input type="checkbox" id="beta-no-show"> Don’t show again
       </label>
     </div>
   </div>
 </div>
+<script>
+  try{if(localStorage.getItem('beta_dismissed')==='1')document.getElementById('beta-overlay').style.display='none';}catch(e){}
+</script>
 <div id="map"></div>
 <div id="radar-status" id="radar-status">Loading radar…</div>
 
@@ -738,19 +746,7 @@ function togglePanel() { document.getElementById('panel').classList.toggle('open
 loadAlerts();
 setInterval(loadAlerts, 60000);
 
-// ── BETA DISCLAIMER ───────────────────────────────────────────────────────
-function dismissBeta() {
-  if (document.getElementById('beta-no-show').checked) {
-    try { localStorage.setItem('beta_dismissed', '1'); } catch(e){}
-  }
-  document.getElementById('beta-overlay').classList.add('hidden');
-}
-// Check if user already dismissed it
-try {
-  if (localStorage.getItem('beta_dismissed') === '1') {
-    document.getElementById('beta-overlay').classList.add('hidden');
-  }
-} catch(e) {}
+// ── BETA DISCLAIMER handled inline on the modal button ───────────────────
 </script>
 </body>
 </html>
