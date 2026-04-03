@@ -659,7 +659,6 @@ const MAX_LOADED   = 5;         // max frames kept in memory at once (iOS memory
 // WMS overlays (static, update TIME param each frame)
 let wmsCanada = null;
 let wmsDWD    = null;
-let wmsUK     = null;
 let wmsNorway = null;
 let wmsINMIND = null;  // Netherlands
 
@@ -680,56 +679,57 @@ function floorMins(d, n) {
 function buildWMSOverlays() {
   if (wmsCanada) { try { map.removeLayer(wmsCanada); } catch(e){} }
   if (wmsDWD)    { try { map.removeLayer(wmsDWD);    } catch(e){} }
-  if (wmsUK)     { try { map.removeLayer(wmsUK);     } catch(e){} }
   if (wmsNorway) { try { map.removeLayer(wmsNorway); } catch(e){} }
   if (wmsINMIND) { try { map.removeLayer(wmsINMIND); } catch(e){} }
 
   // Canada — MSC GeoMet 1km radar, free, no key
-  wmsCanada = L.tileLayer.wms('https://geo.weather.gc.ca/geomet?', {
-    layers: 'RADAR_1KM_RRAI', version: '1.3.0',
-    format: 'image/png', transparent: true,
-    opacity: 0.85, pane: 'radarPane', maxZoom: 19,
-    crossOrigin: '', attribution: 'MSC/ECCC'
-  }).addTo(map);
+  try {
+    wmsCanada = L.tileLayer.wms('https://geo.weather.gc.ca/geomet?', {
+      layers: 'RADAR_1KM_RRAI', version: '1.3.0',
+      format: 'image/png', transparent: true,
+      opacity: 0.85, pane: 'radarPane', maxZoom: 19,
+      crossOrigin: '', attribution: 'MSC/ECCC'
+    }).addTo(map);
+    wmsCanada.on('tileerror', e => { if (e.tile) e.tile.style.display = 'none'; });
+  } catch(e) { wmsCanada = null; }
 
   // Germany + Europe — DWD 1km radar, free, no key
-  wmsDWD = L.tileLayer.wms('https://maps.dwd.de/geoserver/dwd/wms?', {
-    layers: 'dwd:RX-Produkt', version: '1.3.0',
-    format: 'image/png', transparent: true,
-    opacity: 0.85, pane: 'radarPane', maxZoom: 19,
-    crossOrigin: '', attribution: 'DWD'
-  }).addTo(map);
+  try {
+    wmsDWD = L.tileLayer.wms('https://maps.dwd.de/geoserver/dwd/wms?', {
+      layers: 'dwd:RX-Produkt', version: '1.3.0',
+      format: 'image/png', transparent: true,
+      opacity: 0.85, pane: 'radarPane', maxZoom: 19,
+      crossOrigin: '', attribution: 'DWD'
+    }).addTo(map);
+    wmsDWD.on('tileerror', e => { if (e.tile) e.tile.style.display = 'none'; });
+  } catch(e) { wmsDWD = null; }
 
-  // UK — Met Office rainfall radar (XYZ tiles, free, no key — actually needs API key, use Open-Meteo instead)
-  // Open-Meteo provides global radar tiles for many regions via their weather API
-  // We'll use their free radar precipitation layer instead
-  wmsUK = L.tileLayer(
-    'https://tile.open-meteo.com/v1/radar?past_days=0&start_date={time}&hour={hour}&z={z}&x={x}&y={y}',
-    { opacity: 0.85, pane: 'radarPane', maxNativeZoom: 9, maxZoom: 19, attribution: 'Open-Meteo' }
-  ).addTo(map);
-  wmsUK.on('tileerror', e => { e.tile.style.display = 'none'; });
+  // Norway / Nordics — MET Norway radar (free, no key)
+  try {
+    wmsNorway = L.tileLayer.wms('https://shyrd.met.no/radar?', {
+      layers: 'composite,se', version: '1.1.1',
+      format: 'image/png', transparent: true,
+      opacity: 0.8, pane: 'radarPane', maxZoom: 19,
+      attribution: 'MET Norway'
+    }).addTo(map);
+    wmsNorway.on('tileerror', e => { if (e.tile) e.tile.style.display = 'none'; });
+  } catch(e) { wmsNorway = null; }
 
-  // Norway / Nordics — MET Norway radar (free, no key, requires auth but public endpoint)
-  wmsNorway = L.tileLayer.wms('https://shyrd.met.no/radar?', {
-    layers: 'composite,se', version: '1.1.1',
-    format: 'image/png', transparent: true,
-    opacity: 0.8, pane: 'radarPane', maxZoom: 19,
-    attribution: 'MET Norway'
-  }).addTo(map);
-
-  // Netherlands — INMIND/KMI radar (free, via Buienradar)
-  wmsINMIND = L.tileLayer(
-    'https://gpsgader.buienradar.nl/2.0/image/1.0/{z}/{x}/{y}.png',
-    { opacity: 0.85, pane: 'radarPane', maxNativeZoom: 9, maxZoom: 19, attribution: 'Buienradar/INMIND' }
-  ).addTo(map);
-  wmsINMIND.on('tileerror', e => { e.tile.style.display = 'none'; });
+  // Netherlands — Buienradar radar (free, no key)
+  try {
+    wmsINMIND = L.tileLayer(
+      'https://api.buienradar.nl/image/1.0/{z}/{x}/{y}.png',
+      { opacity: 0.85, pane: 'radarPane', maxNativeZoom: 9, maxZoom: 19, attribution: 'Buienradar' }
+    ).addTo(map);
+    wmsINMIND.on('tileerror', e => { if (e.tile) e.tile.style.display = 'none'; });
+  } catch(e) { wmsINMIND = null; }
 }
 
 function updateWMSTime(minsAgo) {
   const t = floorMins(new Date(Date.now() - minsAgo * 60000), 5);
   const ts = isoUTC(t);
-  if (wmsCanada) wmsCanada.setParams({ TIME: ts }, false);
-  if (wmsDWD)    wmsDWD.setParams({ TIME: ts }, false);
+  if (wmsCanada) { try { wmsCanada.setParams({ TIME: ts }, false); } catch(e){} }
+  if (wmsDWD)    { try { wmsDWD.setParams({ TIME: ts }, false);    } catch(e){} }
 }
 
 async function loadRadar() {
@@ -739,13 +739,27 @@ async function loadRadar() {
     // Fetch RainViewer manifest — explicit error handling for Safari
     let rv;
     try {
-      const res = await fetch('https://api.rainviewer.com/public/weather-maps.json', { cache:'no-cache' });
+      const res = await fetch('https://api.rainviewer.com/public/weather-maps.json', {
+        cache: 'no-store',
+        mode: 'cors'
+      });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       rv = await res.json();
     } catch(fetchErr) {
-      console.warn('RainViewer fetch failed:', fetchErr);
-      setStatus('Radar unavailable', true);
-      return;
+      console.warn('RainViewer fetch failed, trying fallback:', fetchErr);
+      // Fallback: try the RainViewer CDN directly to test connectivity
+      try {
+        const res2 = await fetch('https://tilecache.rainviewer.com/v2/radar/nowcast/past.json', { cache: 'no-store' });
+        if (res2.ok) {
+          rv = await res2.json();
+        } else {
+          throw new Error('Fallback also failed');
+        }
+      } catch(e2) {
+        console.warn('All radar fetch attempts failed:', e2);
+        setStatus('Radar unavailable', true);
+        return;
+      }
     }
     const rvPast = (rv.radar && rv.radar.past) || [];
     if (!rvPast.length) { setStatus('No radar data', true); return; }
@@ -816,8 +830,10 @@ async function loadRadar() {
 
 function ensureLayer(layer) {
   if (!map.hasLayer(layer)) {
+    layer.on('tileerror', evt => {
+      if (evt.tile) evt.tile.style.display = 'none';
+    });
     layer.addTo(map);
-    layer.on('tileerror', evt => { evt.tile.style.display = 'none'; });
   }
 }
 
@@ -852,10 +868,20 @@ function showFrame(idx) {
     }
   }
 
-  activeRV  = f.rvLayer;  activeRV.setOpacity(0.75);
+  activeRV  = f.rvLayer;  activeRV.setOpacity(getRadarOpacity());
   activeIEM = f.iemLayer; activeIEM.setOpacity(0.9);
   updateWMSTime(frames[currentIdx].minsAgo);
   updateUI();
+}
+
+// Radar tile opacity scales with zoom — subtle at low zoom, vivid at high zoom
+function getRadarOpacity() {
+  const z = map.getZoom();
+  if (z <= 3) return 0.3;
+  if (z <= 5) return 0.5;
+  if (z <= 7) return 0.65;
+  if (z <= 9) return 0.75;
+  return 0.85;
 }
 
 function updateUI() {
@@ -1336,11 +1362,18 @@ function renderAlertLayers() {
   });
 }
 
-// Re-render alert polygons whenever the user zooms (throttled)
+// Re-render alert polygons AND adjust radar opacity whenever the user zooms or pans (throttled)
 let _zoomTimer = null;
-map.on('zoomend', () => {
+map.on('zoomend moveend', () => {
   clearTimeout(_zoomTimer);
-  _zoomTimer = setTimeout(renderAlertLayers, 150);
+  _zoomTimer = setTimeout(() => {
+    renderAlertLayers();
+    // Dynamically adjust radar tile opacity based on new zoom level
+    if (activeRV) activeRV.setOpacity(getRadarOpacity());
+    // Force tiles to redraw at new zoom
+    if (activeRV && map.hasLayer(activeRV)) activeRV.redraw();
+    if (activeIEM && map.hasLayer(activeIEM)) activeIEM.redraw();
+  }, 100);
 });
 
 async function fetchEUAlerts() {
