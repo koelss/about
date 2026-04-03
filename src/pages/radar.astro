@@ -229,6 +229,20 @@ body { background:#03030a; color:#f0eeff; }
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.4;
 }
 
+/* Alert tag (e.g. TORNADO, SEVERE TSTM, FLOOD) */
+.alert-tag-row {
+  display:flex; align-items:center; gap:4px; flex-wrap:wrap;
+  margin-bottom:2px;
+}
+.alert-tag-chip {
+  font-size:8.5px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  padding:2px 6px; border-radius:3px;
+  border:1px solid;
+  background:rgba(255,255,255,0.05);
+  white-space:nowrap;
+  font-family:"JetBrains Mono",monospace;
+}
+
 /* Area */
 .alert-area {
   font-size:11px; color:rgba(240,238,255,0.4); line-height:1.5;
@@ -409,6 +423,9 @@ body { background:#03030a; color:#f0eeff; }
     background:rgba(255,255,255,0.15);
   }
   .panel-header { position:relative; padding-top:20px; }
+
+  /* Smaller tags on mobile */
+  .alert-tag-chip { font-size:7.5px; padding:2px 5px; }
 
   /* Hide side toggle tab */
   #panel-toggle { display:none !important; }
@@ -662,6 +679,10 @@ let wmsDWD    = null;
 let wmsNorway = null;
 let wmsINMIND = null;  // Netherlands
 
+// High-detail US radar overlays (these support deep zoom)
+let wmsUSHighRes = null;   // IEM GeoServer NEXRAD WMS (zoom 14+)
+let wmsUSMRMS    = null;   // NOAA MRMS composite (very high res)
+
 function setStatus(msg, show) {
   const el = document.getElementById('radar-status');
   el.textContent = msg;
@@ -677,10 +698,12 @@ function floorMins(d, n) {
 }
 
 function buildWMSOverlays() {
-  if (wmsCanada) { try { map.removeLayer(wmsCanada); } catch(e){} }
-  if (wmsDWD)    { try { map.removeLayer(wmsDWD);    } catch(e){} }
-  if (wmsNorway) { try { map.removeLayer(wmsNorway); } catch(e){} }
-  if (wmsINMIND) { try { map.removeLayer(wmsINMIND); } catch(e){} }
+  if (wmsCanada)  { try { map.removeLayer(wmsCanada);  } catch(e){} }
+  if (wmsDWD)     { try { map.removeLayer(wmsDWD);     } catch(e){} }
+  if (wmsNorway)  { try { map.removeLayer(wmsNorway);  } catch(e){} }
+  if (wmsINMIND)  { try { map.removeLayer(wmsINMIND);  } catch(e){} }
+  if (wmsUSHighRes) { try { map.removeLayer(wmsUSHighRes); } catch(e){} }
+  if (wmsUSMRMS)    { try { map.removeLayer(wmsUSMRMS);    } catch(e){} }
 
   // Canada — MSC GeoMet 1km radar, free, no key
   try {
@@ -723,13 +746,39 @@ function buildWMSOverlays() {
     ).addTo(map);
     wmsINMIND.on('tileerror', e => { if (e.tile) e.tile.style.display = 'none'; });
   } catch(e) { wmsINMIND = null; }
+
+  // ── HIGH-DETAIL US RADAR ─────────────────────────────────────────
+  // IEM GeoServer NEXRAD WMS — supports zoom 14+, much higher detail than tiles
+  try {
+    wmsUSHighRes = L.tileLayer.wms('https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?', {
+      layers: 'nexrad-n0r', version: '1.1.1',
+      format: 'image/png', transparent: true,
+      opacity: 0.9, pane: 'radarPane', maxZoom: 19,
+      attribution: 'IEM/NWS'
+    }).addTo(map);
+    wmsUSHighRes.on('tileerror', e => { if (e.tile) e.tile.style.display = 'none'; });
+  } catch(e) { wmsUSHighRes = null; }
+
+  // NOAA MRMS — Multi-Radar Multi-Sensor, 0.01° resolution, highest detail available
+  // Free, no key, served by Iowa State University
+  try {
+    wmsUSMRMS = L.tileLayer.wms('https://mesonet.agron.iastate.edu/cgi-bin/wms/mrms/n1p_base_reflectivity.cgi?', {
+      layers: 'mrms-n1p-base-reflectivity', version: '1.1.1',
+      format: 'image/png', transparent: true,
+      opacity: 0.9, pane: 'radarPane', maxZoom: 19,
+      attribution: 'NOAA MRMS/IEM'
+    }).addTo(map);
+    wmsUSMRMS.on('tileerror', e => { if (e.tile) e.tile.style.display = 'none'; });
+  } catch(e) { wmsUSMRMS = null; }
 }
 
 function updateWMSTime(minsAgo) {
   const t = floorMins(new Date(Date.now() - minsAgo * 60000), 5);
   const ts = isoUTC(t);
-  if (wmsCanada) { try { wmsCanada.setParams({ TIME: ts }, false); } catch(e){} }
-  if (wmsDWD)    { try { wmsDWD.setParams({ TIME: ts }, false);    } catch(e){} }
+  if (wmsCanada)  { try { wmsCanada.setParams({ TIME: ts }, false);  } catch(e){} }
+  if (wmsDWD)     { try { wmsDWD.setParams({ TIME: ts }, false);     } catch(e){} }
+  if (wmsUSHighRes) { try { wmsUSHighRes.setParams({ TIME: ts }, false); } catch(e){} }
+  if (wmsUSMRMS)    { try { wmsUSMRMS.setParams({ TIME: ts }, false);    } catch(e){} }
 }
 
 async function loadRadar() {
@@ -830,9 +879,18 @@ async function loadRadar() {
 
 function ensureLayer(layer) {
   if (!map.hasLayer(layer)) {
+    // Prevent "zoom level not supported" errors
     layer.on('tileerror', evt => {
-      if (evt.tile) evt.tile.style.display = 'none';
+      if (evt.tile) {
+        evt.tile.style.display = 'none';
+        evt.tile.onerror = null; // prevent further error propagation
+      }
     });
+    // Override _tileOnError to suppress console errors
+    layer._tileOnError = function(e, tile, url) {
+      if (tile) tile.style.display = 'none';
+      // Don't fire error events or log to console — silent fail
+    };
     layer.addTo(map);
   }
 }
@@ -882,6 +940,37 @@ function getRadarOpacity() {
   if (z <= 7) return 0.65;
   if (z <= 9) return 0.75;
   return 0.85;
+}
+
+// Toggle high-detail US layers when zoomed in over the US
+function updateUSHighResLayers() {
+  const z = map.getZoom();
+  const center = map.getCenter();
+  // US bounds roughly: lat 24-50, lng -125 to -66
+  const inUS = center.lat >= 20 && center.lat <= 55 && center.lng >= -130 && center.lng <= -60;
+  const zoomedIn = z >= 9;
+
+  if (inUS && zoomedIn) {
+    // Activate high-detail US radar
+    if (wmsUSHighRes && !map.hasLayer(wmsUSHighRes)) {
+      wmsUSHighRes.addTo(map);
+    }
+    if (wmsUSMRMS && !map.hasLayer(wmsUSMRMS)) {
+      wmsUSMRMS.addTo(map);
+    }
+    // Lower opacity on base RainViewer since high-res layers handle detail
+    if (activeRV) activeRV.setOpacity(0.4);
+  } else {
+    // Remove high-detail US layers when not over US or zoomed out
+    if (wmsUSHighRes && map.hasLayer(wmsUSHighRes)) {
+      try { map.removeLayer(wmsUSHighRes); } catch(e){}
+    }
+    if (wmsUSMRMS && map.hasLayer(wmsUSMRMS)) {
+      try { map.removeLayer(wmsUSMRMS); } catch(e){}
+    }
+    // Restore base RainViewer opacity
+    if (activeRV) activeRV.setOpacity(getRadarOpacity());
+  }
 }
 
 function updateUI() {
@@ -996,22 +1085,57 @@ const timeAgo = iso => {
 };
 
 // Map bounds → which region APIs to query
-// We always fetch NWS (US). For Europe we use MeteoAlarm via open-meteo proxy.
-// For other regions we use Open-Meteo's global alert feed where available.
+// We always fetch NWS (US). For Europe we use MeteoAlarm.
+// For other regions we use national APIs where available.
 
+// ── US — NWS CAP alerts (severe thunderstorm, tornado, flash flood, etc.) ─
 async function fetchNWSAlerts() {
   try {
     const data = await (await fetch('https://api.weather.gov/alerts/active?status=actual&message_type=alert&limit=500')).json();
-    return (data.features||[]).map(f => ({
-      severity: f.properties.severity || 'Unknown',
-      event:    f.properties.event || 'Alert',
-      area:     f.properties.areaDesc || '',
-      sent:     f.properties.sent,
-      geometry: f.geometry,
-      region:   'US',
-      source:   'NWS',
-      url:      f.id || f.properties['@id'] || 'https://www.weather.gov/alerts'
-    }));
+    return (data.features||[]).map(f => {
+      const p = f.properties || {};
+      const event = p.event || 'Alert';
+
+      // NWS severity mapping based on event type
+      let sev = p.severity || 'Unknown';
+      const evt = event.toLowerCase();
+      if (/tornado|extreme wind|flash flood|dust storm|typhoon|hurricane/.test(evt)) sev = 'Extreme';
+      else if (/severe thunderstorm|flash flood watch|flood warning|winter storm|blizzard|ice storm|high wind|storm surge|special marine/.test(evt)) sev = 'Severe';
+      else if (/flood watch|winter weather|freez.*advisory|wind advisory|heat advisory|dense fog|red flag|hard freeze|frost/.test(evt)) sev = 'Moderate';
+      else sev = sev || 'Minor';
+
+      // Determine icon/tag based on event type
+      let tag = '';
+      if (/tornado/.test(evt))           tag = 'TORNADO';
+      else if (/severe thunderstorm/.test(evt)) tag = 'SEVERE TSTM';
+      else if (/flash flood/.test(evt))   tag = 'FLASH FLOOD';
+      else if (/flood/.test(evt))         tag = 'FLOOD';
+      else if (/winter storm|blizzard|ice storm|snow/.test(evt)) tag = 'WINTER STORM';
+      else if (/hurricane|tropical cyclone/.test(evt)) tag = 'HURRICANE';
+      else if (/high wind|extreme wind/.test(evt))     tag = 'HIGH WIND';
+      else if (/heat/.test(evt))          tag = 'HEAT';
+      else if (/fire|red flag/.test(evt)) tag = 'FIRE';
+      else if (/fog/.test(evt))           tag = 'FOG';
+      else if (/air quality|smoke/.test(evt)) tag = 'AIR QUALITY';
+      else if (/marine|special marine/.test(evt)) tag = 'MARINE';
+      else if (/coastal flood|storm surge/.test(evt)) tag = 'COASTAL FLOOD';
+      else if (/extreme cold|wind chill/.test(evt)) tag = 'EXTREME COLD';
+      else if (/excessive heat/.test(evt)) tag = 'EXCESSIVE HEAT';
+
+      return {
+        severity: sev,
+        event: event,
+        tag,   // extra label for the card UI
+        area:     p.areaDesc || '',
+        sent:     p.sent,
+        geometry: f.geometry,
+        region:   'US',
+        source:   'NWS',
+        url:      f.id || p['@id'] || 'https://www.weather.gov/alerts',
+        instruction: p.instruction || null,
+        headline:    p.headline || null
+      };
+    });
   } catch(e) { return []; }
 }
 
@@ -1022,20 +1146,40 @@ async function fetchCanadaAlerts() {
     const data = await (await fetch(url)).json();
     return (data.features || []).map(f => {
       const p = f.properties || {};
+      const evt = (p.alert_name || '').toLowerCase();
       let sev = 'Minor';
-      if (/warning/i.test(p.alert_name||''))    sev = 'Severe';
-      if (/watch/i.test(p.alert_name||''))      sev = 'Moderate';
-      if (/advisory/i.test(p.alert_name||''))   sev = 'Minor';
-      if (/tornado|extreme/i.test(p.alert_name||'')) sev = 'Extreme';
+      if (/tornado|extreme|hurricane|tsunami/.test(evt))    sev = 'Extreme';
+      else if (/warning|severe|blizzard|ice storm/.test(evt)) sev = 'Severe';
+      else if (/watch|winter storm/.test(evt))                sev = 'Moderate';
+      else if (/advisory|special/.test(evt))                  sev = 'Minor';
+
+      let tag = '';
+      if (/tornado/.test(evt))           tag = 'TORNADO';
+      else if (/severe thunderstorm/.test(evt)) tag = 'SEVERE TSTM';
+      else if (/flash flood|flood/.test(evt)) tag = 'FLOOD';
+      else if (/winter storm|blizzard|snow/.test(evt)) tag = 'WINTER STORM';
+      else if (/high wind|wind/.test(evt)) tag = 'HIGH WIND';
+      else if (/heat|extreme temp/.test(evt)) tag = 'HEAT';
+      else if (/fog|freezing fog/.test(evt)) tag = 'FOG';
+      else if (/rainfall|rain/.test(evt))  tag = 'HEAVY RAIN';
+      else if (/freezing rain/.test(evt))  tag = 'FREEZING RAIN';
+      else if (/blowing snow/.test(evt))   tag = 'BLOWING SNOW';
+      else if (/extreme cold/.test(evt))   tag = 'EXTREME COLD';
+      else if (/frost/.test(evt))          tag = 'FROST';
+      else if (/weather\/rainfall/.test(evt)) tag = 'HEAVY RAIN';
+
       return {
         severity: sev,
         event:    p.alert_name || p.type || 'Weather Alert',
+        tag,
         area:     p.zone || p.location || 'Canada',
         sent:     p.effective || null,
         geometry: f.geometry,
         region:   'CA',
         source:   'ECCC',
-        url:      p.url || 'https://weather.gc.ca/warnings/index_e.html'
+        url:      p.url || 'https://weather.gc.ca/warnings/index_e.html',
+        instruction: p.instruction || null,
+        headline:    p.headline || null
       };
     });
   } catch(e) { return []; }
@@ -1062,7 +1206,7 @@ async function fetchAustraliaAlerts() {
       // BOM title is e.g. "Flood Warning for the Daly River" — strip the warning type prefix
       const rawTitle = w.title || w.short_title || 'Weather Warning';
       // area: pull the "for..." part of the title if present, else fall back to state
-      const forMatch = rawTitle.match(/for(.+)/i);
+      const forMatch = rawTitle.match(/\bfor\b\s+(.+)/i);
       const area = forMatch
         ? forMatch[1].trim()
         : (w.state ? w.state.toUpperCase() : 'Australia');
@@ -1072,9 +1216,21 @@ async function fetchAustraliaAlerts() {
         .replace(/\s+for\s+.+/i, '')   // "Flood Warning" not "Flood Warning for the Daly River"
         .trim();
 
+      let tag = '';
+      if (/tropical_cyclone/.test(wtype)) tag = 'CYCLONE';
+      else if (/severe_thunderstorm/.test(wtype)) tag = 'SEVERE TSTM';
+      else if (/flood/.test(wtype)) tag = 'FLOOD';
+      else if (/fire_weather/.test(wtype)) tag = 'FIRE DANGER';
+      else if (/coastal_hazard/.test(wtype)) tag = 'COASTAL HAZARD';
+      else if (/strong_wind/.test(wtype)) tag = 'HIGH WIND';
+      else if (/heat/.test(wtype)) tag = 'HEAT';
+      else if (/frost/.test(wtype)) tag = 'FROST';
+      else if (/marine_wind/.test(wtype)) tag = 'MARINE WIND';
+
       return {
         severity: sev,
         event,
+        tag,
         area,
         sent:     w.issue_time || null,
         geometry: null,
@@ -1094,7 +1250,9 @@ async function fetchAustraliaAlerts() {
           };
           const st = (w.state || '').toLowerCase();
           return statePages[st] || 'https://www.bom.gov.au/warnings/';
-        })()
+        })(),
+        instruction: null,
+        headline: rawTitle
       };
     }).filter(a => a.event && !/cancel|terminated/i.test(a.event));
   } catch(e) { return []; }
@@ -1109,12 +1267,26 @@ async function fetchNZAlerts() {
     const doc = new DOMParser().parseFromString(txt, 'text/xml');
     return [...doc.querySelectorAll('item')].map(item => {
       const title = (item.querySelector('title') ? item.querySelector('title').textContent : null) || 'Weather Alert';
-      let sev = 'Minor';
-      if (/severe|heavy|gale|extreme/i.test(title))   sev = 'Severe';
-      if (/thunderstorm|tornado|cyclone/i.test(title)) sev = 'Extreme';
-      const area = (item.querySelector('description') && item.querySelector('description').textContent ? item.querySelector('description').textContent.split(':')[0] : null) || 'New Zealand';
+      const desc = (item.querySelector('description') && item.querySelector('description').textContent) || '';
+      const areaText = desc.split(':')[0] || 'New Zealand';
       const nzLink = (item.querySelector('link') ? item.querySelector('link').textContent : null) || 'https://www.metservice.com/warnings/home';
-      return { severity:sev, event:title, area, sent:null, geometry:null, region:'NZ', source:'MetService', url:nzLink };
+      const evt = title.toLowerCase();
+      let sev = 'Minor';
+      if (/severe|heavy|gale|extreme|tornado|cyclone/.test(evt))   sev = 'Severe';
+      if (/thunderstorm|tropical cyclone/.test(evt)) sev = 'Extreme';
+
+      let tag = '';
+      if (/tornado/.test(evt)) tag = 'TORNADO';
+      else if (/severe thunderstorm/.test(evt)) tag = 'SEVERE TSTM';
+      else if (/heavy rain|flood/.test(evt)) tag = 'FLOOD';
+      else if (/gale|strong wind/.test(evt)) tag = 'HIGH WIND';
+      else if (/cyclone/.test(evt)) tag = 'CYCLONE';
+      else if (/snow|ice/.test(evt)) tag = 'WINTER STORM';
+      else if (/heat/.test(evt)) tag = 'HEAT';
+      else if (/frost/.test(evt)) tag = 'FROST';
+      else if (/marine/.test(evt)) tag = 'MARINE';
+
+      return { severity: sev, event: title, tag, area: areaText, sent: null, geometry: null, region: 'NZ', source: 'MetService', url: nzLink, instruction: null, headline: null };
     });
   } catch(e) { return []; }
 }
@@ -1122,60 +1294,78 @@ async function fetchNZAlerts() {
 // ── SOUTH AMERICA — GDACS / ReliefWeb global alerts (no key) ──────────────
 async function fetchSouthAmericaAlerts() {
   try {
-    // GDACS — Global Disaster Alert Coordination System, covers LATAM
     const url = 'https://www.gdacs.org/gdacs/api/gdacsAlerts';
     const data = await (await fetch(url)).json();
     return (data.alerts || [])
       .filter(a => {
-        // Filter to South American countries
         const saCountries = ['BR','AR','CL','CO','PE','VE','EC','BO','PY','UY','GY','SR','GF','FK'];
         return saCountries.some(c => (a.country || '').includes(c) || (a.location || '').includes('Brazil') || (a.location || '').includes('Argentina') || (a.location || '').includes('Colombia') || (a.location || '').includes('Chile') || (a.location || '').includes('Peru'));
       })
       .map(a => {
         const sev = a.alertlevel >= 3 ? 'Extreme' : a.alertlevel >= 2 ? 'Severe' : a.alertlevel >= 1 ? 'Moderate' : 'Minor';
+        const evt = (a.eventtype || '').toLowerCase();
+        let tag = '';
+        if (/earthquake|tsunami/.test(evt)) tag = 'EARTHQUAKE';
+        else if (/tornado/.test(evt)) tag = 'TORNADO';
+        else if (/cyclone|typhoon|hurricane/.test(evt)) tag = 'CYCLONE';
+        else if (/flood/.test(evt)) tag = 'FLOOD';
+        else if (/volcano/.test(evt)) tag = 'VOLCANO';
+        else if (/fire|wildfire/.test(evt)) tag = 'FIRE DANGER';
+        else if (/drought/.test(evt)) tag = 'DROUGHT';
+        else if (/landslide/.test(evt)) tag = 'LANDSLIDE';
+
         return {
           severity: sev,
           event:    a.eventtype || 'Weather Alert',
+          tag,
           area:     a.location || 'South America',
           sent:     a.fromdate || null,
           geometry: null,
           region:   'SA',
           source:   'GDACS',
-          url:      a.gdacsurl || 'https://www.gdacs.org/'
+          url:      a.gdacsurl || 'https://www.gdacs.org/',
+          instruction: null,
+          headline: a.description || null
         };
       });
   } catch(e) { return []; }
 }
 
-// ── JAPAN — JMA (Japan Meteorological Agency) via Open-Meteo proxy ────────
+// ── JAPAN — JMA (Japan Meteorological Agency) via GDACS ───────────────────
 async function fetchJapanAlerts() {
   try {
-    // Open-Meteo provides Japanese weather alerts via their EUID-based feed
-    const url = 'https://api.open-meteo.com/v1/european-composition-alert?&limit=50';
-    // Alternative: JMA XML CAP via their public feed
-    const jmaUrl = 'https://www.data.jma.go.jp/developer/xml/info_feed.xml';
-    // Since JMA doesn't provide CORS-friendly JSON, use GDACS Japan feed
     const gdacsUrl = 'https://www.gdacs.org/gdacs/api/gdacsAlerts';
     const data = await (await fetch(gdacsUrl)).json();
     return (data.alerts || [])
       .filter(a => (a.country || '').includes('JP') || (a.location || '').toLowerCase().includes('japan'))
       .map(a => {
         const sev = a.alertlevel >= 3 ? 'Extreme' : a.alertlevel >= 2 ? 'Severe' : 'Moderate';
+        const evt = (a.eventtype || '').toLowerCase();
+        let tag = '';
+        if (/earthquake|tsunami/.test(evt)) tag = 'EARTHQUAKE';
+        else if (/typhoon/.test(evt)) tag = 'CYCLONE';
+        else if (/flood/.test(evt)) tag = 'FLOOD';
+        else if (/volcano/.test(evt)) tag = 'VOLCANO';
+        else if (/fire/.test(evt)) tag = 'FIRE DANGER';
+
         return {
           severity: sev,
           event:    a.eventtype || 'Weather Alert',
+          tag,
           area:     a.location || 'Japan',
           sent:     a.fromdate || null,
           geometry: null,
           region:   'JP',
           source:   'JMA/GDACS',
-          url:      a.gdacsurl || 'https://www.jma.go.jp/jma/indexe.html'
+          url:      a.gdacsurl || 'https://www.jma.go.jp/jma/indexe.html',
+          instruction: null,
+          headline: a.description || null
         };
       });
   } catch(e) { return []; }
 }
 
-// ── INDIA — IMD warnings via GDACS + ReliefWeb ────────────────────────────
+// ── INDIA — IMD warnings via GDACS ────────────────────────────────────────
 async function fetchIndiaAlerts() {
   try {
     const url = 'https://www.gdacs.org/gdacs/api/gdacsAlerts';
@@ -1184,22 +1374,98 @@ async function fetchIndiaAlerts() {
       .filter(a => (a.country || '').includes('IN') || (a.location || '').toLowerCase().includes('india'))
       .map(a => {
         const sev = a.alertlevel >= 3 ? 'Extreme' : a.alertlevel >= 2 ? 'Severe' : 'Moderate';
+        const evt = (a.eventtype || '').toLowerCase();
+        let tag = '';
+        if (/cyclone/.test(evt)) tag = 'CYCLONE';
+        else if (/flood/.test(evt)) tag = 'FLOOD';
+        else if (/earthquake/.test(evt)) tag = 'EARTHQUAKE';
+        else if (/heat/.test(evt)) tag = 'HEAT';
+        else if (/fire/.test(evt)) tag = 'FIRE DANGER';
+        else if (/drought/.test(evt)) tag = 'DROUGHT';
+
         return {
           severity: sev,
           event:    a.eventtype || 'Weather Alert',
+          tag,
           area:     a.location || 'India',
           sent:     a.fromdate || null,
           geometry: null,
           region:   'IN',
           source:   'IMD/GDACS',
-          url:      a.gdacsurl || 'https://mausam.imd.gov.in/'
+          url:      a.gdacsurl || 'https://mausam.imd.gov.in/',
+          instruction: null,
+          headline: a.description || null
         };
       });
   } catch(e) { return []; }
 }
 
+// ── US SPC — Storm Prediction Center watches (tornado/severe tstm) ────────
+async function fetchSPCWatches() {
+  try {
+    // SPC provides active watches as GeoJSON
+    const data = await (await fetch('https://www.spc.noaa.gov/products/watch/active-watches.geojson')).json();
+    return (data.features || []).map(f => {
+      const p = f.properties || {};
+      const evt = (p.type || p.event || '').toLowerCase();
+      // SPC watches are always either tornado or severe thunderstorm
+      const isTornado = /tornado/.test(evt);
+      const sev = isTornado ? 'Extreme' : 'Severe';
+      const tag = isTornado ? 'TORNADO WATCH' : 'SEVERE TSTM WATCH';
+
+      return {
+        severity: sev,
+        event:    p.type || p.event || 'SPC Watch',
+        tag,
+        area:     p.countyname || p.state || '',
+        sent:     p.date || null,
+        geometry: f.geometry,
+        region:   'US',
+        source:   'SPC',
+        url:      'https://www.spc.noaa.gov/products/watch/',
+        instruction: null,
+        headline: p.description || null
+      };
+    });
+  } catch(e) { return []; }
+}
+
+// ── US NHC — National Hurricane Center tropical alerts ─────────────────────
+async function fetchNHCAlerts() {
+  try {
+    // NHC provides active tropical cyclone advisories as GeoJSON
+    const data = await (await fetch('https://www.nhc.noaa.gov/gis/atcf/active.json')).json();
+    return (data.features || []).map(f => {
+      const p = f.properties || {};
+      const name = p.name || 'Tropical Cyclone';
+      const type = (p.type || '').toLowerCase();
+      let sev = 'Moderate';
+      let tag = 'TROPICAL';
+      if (/hurricane|major hurricane/.test(type)) { sev = 'Extreme'; tag = 'HURRICANE'; }
+      else if (/tropical storm/.test(type)) { sev = 'Severe'; tag = 'TROPICAL STORM'; }
+      else if (/tropical depression/.test(type)) { sev = 'Moderate'; tag = 'TROPICAL DEPRESSION'; }
+      else if (/invest/.test(type)) { sev = 'Minor'; tag = 'INVEST'; }
+
+      return {
+        severity: sev,
+        event:    `${name} — ${p.type || 'Tropical Cyclone'}`,
+        tag,
+        area:     p.basin || 'Atlantic/Pacific',
+        sent:     p.advisoryDate || null,
+        geometry: f.geometry,
+        region:   'US',
+        source:   'NHC',
+        url:      'https://www.nhc.noaa.gov/',
+        instruction: null,
+        headline: `${name}: ${p.type}`
+      };
+    });
+  } catch(e) { return []; }
+}
+
 // US (NWS) + EU (MeteoAlarm) + Canada (MSC GeoMet) + Australia (BOM) + NZ (MetService)
 // + South America (GDACS) + Japan (JMA/GDACS) + India (IMD/GDACS)
+// + US SPC (Storm Prediction Center watches) + US NHC (National Hurricane Center)
 async function loadAlerts() {
   alertLayers.forEach(l => { try { map.removeLayer(l); } catch(e){} });
   alertLayers = [];
@@ -1216,7 +1482,13 @@ async function loadAlerts() {
     fetchIndiaAlerts(),
   ]);
 
-  const allAlerts = [...usAlerts, ...euAlerts, ...caAlerts, ...auAlerts, ...nzAlerts, ...saAlerts, ...jpAlerts, ...inAlerts].sort((a,b) =>
+  // Also fetch SPC watches (severe thunderstorm/tornado watches) and NHC hurricanes
+  const [spcWatches, nhcAlerts] = await Promise.all([
+    fetchSPCWatches(),
+    fetchNHCAlerts(),
+  ]);
+
+  const allAlerts = [...usAlerts, ...euAlerts, ...caAlerts, ...auAlerts, ...nzAlerts, ...saAlerts, ...jpAlerts, ...inAlerts, ...spcWatches, ...nhcAlerts].sort((a,b) =>
     (sevOrder[a.severity]||4) - (sevOrder[b.severity]||4)
   );
 
@@ -1258,6 +1530,11 @@ function makeAlertCard(a) {
   const sevColors = { Extreme:'#ff00cc', Severe:'#ff3737', Moderate:'#ff9500', Minor:'#ffd60a', Unknown:'rgba(255,255,255,0.25)' };
   const sevColor = sevColors[a.severity] || sevColors.Unknown;
 
+  // Tag pill (e.g. TORNADO, SEVERE TSTM, FLOOD, etc.)
+  const tagHtml = a.tag
+    ? `<span class="alert-tag-chip" style="border-color:${sevColor}44;color:${sevColor};background:${sevColor}11">${a.tag}</span>`
+    : '';
+
   const govLinkHtml = a.url
     ? `<a class="alert-gov-link" href="${a.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()">&#8599; View alert</a>`
     : '';
@@ -1272,6 +1549,7 @@ function makeAlertCard(a) {
         `</div>` +
         (timeStr ? `<span class="alert-time-chip">${timeStr}</span>` : '') +
       `</div>` +
+      (tagHtml ? `<div class="alert-tag-row">${tagHtml}</div>` : '') +
       `<div class="alert-event" title="${a.event}">${a.event}</div>` +
       `<div class="alert-area" title="${a.area}">${a.area}</div>` +
       `<div class="alert-footer">` +
@@ -1368,8 +1646,7 @@ map.on('zoomend moveend', () => {
   clearTimeout(_zoomTimer);
   _zoomTimer = setTimeout(() => {
     renderAlertLayers();
-    // Dynamically adjust radar tile opacity based on new zoom level
-    if (activeRV) activeRV.setOpacity(getRadarOpacity());
+    updateUSHighResLayers();
     // Force tiles to redraw at new zoom
     if (activeRV && map.hasLayer(activeRV)) activeRV.redraw();
     if (activeIEM && map.hasLayer(activeIEM)) activeIEM.redraw();
@@ -1383,6 +1660,7 @@ async function fetchEUAlerts() {
     return (data.features||[]).map(f => {
       const p = f.properties||{};
       const awareness = p.awareness_level || '';
+      const awarenessType = (p.awareness_type || '').toLowerCase();
       // MeteoAlarm levels: 1=green(none), 2=yellow, 3=orange, 4=red
       const lvl = parseInt(awareness.split(';')[0]) || 1;
       const sev = lvl >= 4 ? 'Extreme' : lvl === 3 ? 'Severe' : lvl === 2 ? 'Moderate' : 'Minor';
@@ -1398,22 +1676,39 @@ async function fetchEUAlerts() {
       };
       const cc = (p.country||'').toUpperCase();
       const agency = EU_AGENCY[cc] || (cc||'MeteoAlarm');
+
+      // Determine tag based on awareness type
+      let tag = '';
+      if (/thunderstorm/.test(awarenessType)) tag = 'SEVERE TSTM';
+      else if (/tornado/.test(awarenessType)) tag = 'TORNADO';
+      else if (/rain|flood/.test(awarenessType)) tag = 'FLOOD';
+      else if (/wind/.test(awarenessType)) tag = 'HIGH WIND';
+      else if (/snow|ice/.test(awarenessType)) tag = 'WINTER STORM';
+      else if (/heat|temperature/.test(awarenessType)) tag = 'HEAT';
+      else if (/cold|frost/.test(awarenessType)) tag = 'EXTREME COLD';
+      else if (/fog/.test(awarenessType)) tag = 'FOG';
+      else if (/coastal/.test(awarenessType)) tag = 'COASTAL HAZARD';
+      else if (/forest.?fire|wildfire/.test(awarenessType)) tag = 'FIRE DANGER';
+      else if (/avalanche/.test(awarenessType)) tag = 'AVALANCHE';
+      else if (/rainbow|rain/.test(awarenessType)) tag = 'HEAVY RAIN';
+
       return {
         severity: sev,
         event:    p.awareness_type ? p.awareness_type.split(';')[1] || 'Weather Alert' : 'Weather Alert',
+        tag,
         area:     p.region_name || p.country || 'Europe',
         sent:     p.from || null,
         geometry: f.geometry,
         region:   'EU',
         source:   agency,
-        url:      'https://www.meteoalarm.org/en/live/'
+        url:      'https://www.meteoalarm.org/en/live/',
+        instruction: p.description || null,
+        headline: p.awareness_type || null
       };
     });
   } catch(e) {
-    // Fallback: try the CORS-friendly GeoJSON endpoint
     try {
       const r = await fetch('https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-europe');
-      // RSS fallback — skip if CORS blocked
       return [];
     } catch(e2) { return []; }
   }
