@@ -5,7 +5,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>koels.site — Radar</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2303030a'/%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%236c5ce7' stroke-width='0.8' opacity='0.4'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%236c5ce7' stroke-width='0.8' opacity='0.5'/%3E%3Ccircle cx='16' cy='16' r='5' fill='none' stroke='%236c5ce7' stroke-width='0.8' opacity='0.7'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23a29bfe'/%3E%3Cline x1='16' y1='16' x2='27' y2='7' stroke='%23a29bfe' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='24' cy='9' r='2' fill='%2300ff88'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +23,7 @@ body { background:#03030a; color:#f0eeff; }
   height:54px; display:flex; align-items:center; justify-content:space-between;
   padding:0 20px;
   background:rgba(3,3,10,0.92); border-bottom:1px solid rgba(255,255,255,0.07);
+  -webkit-backdrop-filter:blur(20px);
   backdrop-filter:blur(20px);
 }
 .header-left { display:flex; align-items:center; gap:14px; }
@@ -56,6 +57,7 @@ body { background:#03030a; color:#f0eeff; }
 /* BETA DISCLAIMER MODAL */
 #beta-overlay {
   position:fixed; inset:0; z-index:9999;
+  background:rgba(3,3,10,0.85); -webkit-backdrop-filter:blur(12px);
   background:rgba(3,3,10,0.85); backdrop-filter:blur(12px);
   display:flex; align-items:center; justify-content:center;
   padding:20px;
@@ -287,6 +289,7 @@ body { background:#03030a; color:#f0eeff; }
   z-index:900;
   background:rgba(3,3,10,0.92); border:1px solid rgba(255,255,255,0.09);
   border-radius:16px; padding:12px 18px 14px;
+  -webkit-backdrop-filter:blur(20px);
   backdrop-filter:blur(20px);
   width:min(540px, calc(100vw - 32px));
 }
@@ -595,7 +598,12 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
 
 // Force map to recalculate its size — fixes black map on mobile
 setTimeout(() => map.invalidateSize(), 100);
-window.addEventListener('resize', () => map.invalidateSize());
+// Use visualViewport on iOS to avoid resize firing on pinch zoom
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => map.invalidateSize());
+} else {
+  window.addEventListener('resize', () => map.invalidateSize());
+}
 
 // Custom pane for radar tiles so they are NOT affected by the base tile CSS filter
 map.createPane('radarPane');
@@ -662,7 +670,7 @@ function buildWMSOverlays() {
     layers: 'RADAR_1KM_RRAI', version: '1.3.0',
     format: 'image/png', transparent: true,
     opacity: 0.85, pane: 'radarPane', maxZoom: 19,
-    attribution: 'MSC/ECCC'
+    crossOrigin: '', attribution: 'MSC/ECCC'
   }).addTo(map);
 
   // Germany + Europe — DWD 1km radar, free, no key
@@ -670,7 +678,7 @@ function buildWMSOverlays() {
     layers: 'dwd:RX-Produkt', version: '1.3.0',
     format: 'image/png', transparent: true,
     opacity: 0.85, pane: 'radarPane', maxZoom: 19,
-    attribution: 'DWD'
+    crossOrigin: '', attribution: 'DWD'
   }).addTo(map);
 }
 
@@ -685,9 +693,18 @@ async function loadRadar() {
   try {
     setStatus('Loading radar\u2026', true);
 
-    // Fetch RainViewer manifest for global coverage
-    const rv   = await (await fetch('https://api.rainviewer.com/public/weather-maps.json')).json();
-    const rvPast = rv.radar?.past || [];
+    // Fetch RainViewer manifest — explicit error handling for Safari
+    let rv;
+    try {
+      const res = await fetch('https://api.rainviewer.com/public/weather-maps.json', { cache:'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      rv = await res.json();
+    } catch(fetchErr) {
+      console.warn('RainViewer fetch failed:', fetchErr);
+      setStatus('Radar unavailable', true);
+      return;
+    }
+    const rvPast = (rv.radar && rv.radar.past) || [];
     if (!rvPast.length) { setStatus('No radar data', true); return; }
 
     stopPlay();  // stop before touching layers
@@ -991,12 +1008,12 @@ async function fetchNZAlerts() {
     const txt = await r.text();
     const doc = new DOMParser().parseFromString(txt, 'text/xml');
     return [...doc.querySelectorAll('item')].map(item => {
-      const title = item.querySelector('title')?.textContent || 'Weather Alert';
+      const title = (item.querySelector('title') ? item.querySelector('title').textContent : null) || 'Weather Alert';
       let sev = 'Minor';
       if (/severe|heavy|gale|extreme/i.test(title))   sev = 'Severe';
       if (/thunderstorm|tornado|cyclone/i.test(title)) sev = 'Extreme';
-      const area = item.querySelector('description')?.textContent?.split(':')[0] || 'New Zealand';
-      const nzLink = item.querySelector('link')?.textContent || 'https://www.metservice.com/warnings/home';
+      const area = (item.querySelector('description') && item.querySelector('description').textContent ? item.querySelector('description').textContent.split(':')[0] : null) || 'New Zealand';
+      const nzLink = (item.querySelector('link') ? item.querySelector('link').textContent : null) || 'https://www.metservice.com/warnings/home';
       return { severity:sev, event:title, area, sent:null, geometry:null, region:'NZ', source:'MetService', url:nzLink };
     });
   } catch(e) { return []; }
