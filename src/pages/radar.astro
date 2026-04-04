@@ -381,12 +381,12 @@ body { background:#03030a; color:#f0eeff; }
   box-shadow:0 4px 16px rgba(0,0,0,0.4);
 }
 #locate-btn:hover { background:rgba(108,92,231,0.3); border-color:rgba(108,92,231,0.6); transform:scale(1.05); }
-#locate-btn svg { width:18px; height:18px; fill:rgba(162,155,254,0.8); }
-#locate-btn.locating svg { animation: pulse-ring 1s ease-out infinite; }
-@keyframes pulse-ring {
-  0% { fill:rgba(162,155,254,0.8); }
-  50% { fill:#a29bfe; filter:drop-shadow(0 0 6px #a29bfe); }
-  100% { fill:rgba(162,155,254,0.8); }
+#locate-btn svg { width:18px; height:18px; }
+#locate-btn.locating svg circle { animation: pulse-ring-stroke 1s ease-out infinite; }
+@keyframes pulse-ring-stroke {
+  0% { stroke:rgba(162,155,254,0.85); }
+  50% { stroke:#a29bfe; filter:drop-shadow(0 0 4px #a29bfe); }
+  100% { stroke:rgba(162,155,254,0.85); }
 }
 
 /* SEARCH BAR */
@@ -441,19 +441,19 @@ body { background:#03030a; color:#f0eeff; }
 .ww-location-name { font-size:0.58rem; color:rgba(240,238,255,0.4); letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; }
 .ww-close-btn { font-size:0.7rem; color:rgba(240,238,255,0.2); cursor:pointer; line-height:1; padding:0 2px; }
 .ww-close-btn:hover { color:#f0eeff; }
-.ww-current { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-.ww-temp { font-size:1.4rem; font-weight:700; color:#f0eeff; line-height:1; }
-.ww-temp-unit { font-size:0.5rem; color:rgba(240,238,255,0.4); vertical-align:super; }
+.ww-current { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+.ww-temp { font-size:2.2rem; font-weight:700; color:#f0eeff; line-height:1; }
+.ww-temp-unit { font-size:0.7rem; color:rgba(240,238,255,0.4); vertical-align:super; }
 .ww-unit-toggle {
-  font-size:0.58rem; font-weight:700; color:rgba(240,238,255,0.25);
-  cursor:pointer; padding:3px 7px; border-radius:5px; margin-left:6px;
+  font-size:0.7rem; font-weight:700; color:rgba(240,238,255,0.25);
+  cursor:pointer; padding:4px 10px; border-radius:6px; margin-left:6px;
   border:1px solid rgba(255,255,255,0.08); background:transparent;
   font-family:"JetBrains Mono",monospace; letter-spacing:0.06em;
   transition:all 0.15s;
 }
 .ww-unit-toggle:hover { color:rgba(240,238,255,0.6); border-color:rgba(255,255,255,0.15); }
 .ww-unit-toggle.active { color:#a29bfe; border-color:rgba(108,92,231,0.5); background:rgba(108,92,231,0.15); }
-.ww-icon { font-size:1.6rem; }
+.ww-icon { font-size:2.4rem; }
 .ww-details { display:flex; gap:12px; margin-bottom:10px; }
 .ww-detail { font-size:0.5rem; color:rgba(240,238,255,0.4); letter-spacing:0.04em; text-transform:uppercase; }
 .ww-detail span { color:rgba(240,238,255,0.7); font-weight:600; }
@@ -521,8 +521,8 @@ body { background:#03030a; color:#f0eeff; }
     border-radius:8px; padding:10px 12px;
   }
   .ww-location-name { max-width:200px; font-size:0.52rem; }
-  .ww-temp { font-size:1.2rem; }
-  .ww-icon { font-size:1.3rem; }
+  .ww-temp { font-size:1.8rem; }
+  .ww-icon { font-size:2rem; }
 
   /* Panel — slides up from bottom, full width */
   #panel {
@@ -637,7 +637,10 @@ body { background:#03030a; color:#f0eeff; }
 
 <!-- LOCATE ME BUTTON -->
 <div id="locate-btn" onclick="locateMe()" title="Go to my location">
-  <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94-3A8.94 8.94 0 0 0 12 3C7.03 3 3 7.03 3 12s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zM12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="rgba(162,155,254,0.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+  </svg>
 </div>
 
 <!-- SEARCH BAR -->
@@ -1956,6 +1959,7 @@ async function doSearch(query) {
         searchResults.classList.remove('show');
         searchInput.value = r.name;
         map.flyTo([r.latitude, r.longitude], 10, { duration: 1.5 });
+        setTimeout(() => map.invalidateSize(), 1600);
         fetchWeather(r.latitude, r.longitude, r.name);
       });
       searchResults.appendChild(item);
