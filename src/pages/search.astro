@@ -129,12 +129,10 @@ header {
   letter-spacing:0.2em; text-transform:uppercase; color:var(--white);
   display:flex; align-items:center; gap:10px;
 }
-.logo-pulse {
-  width:6px; height:6px; border-radius:50%;
-  background:var(--lime); box-shadow:0 0 10px var(--lime);
-  animation:lg-pulse 2s ease infinite;
+.logo-icon {
+  width:28px; height:28px; flex-shrink:0;
 }
-@keyframes lg-pulse { 0%,100%{box-shadow:0 0 6px var(--lime)} 50%{box-shadow:0 0 20px var(--lime),0 0 40px rgba(0,255,136,0.25)} }
+.logo-icon svg { width:100%; height:100%; }
 
 .nav { display:flex; align-items:center; gap:32px }
 .nav a {
@@ -364,13 +362,21 @@ h1 .grad {
 
 <!-- HEADER -->
 <header>
-  <div class="logo"><div class="logo-pulse"></div>Koels.site</div>
-  <nav class="nav">
-    <a href="/">Home</a>
-    <a href="/links">Links</a>
-    <a href="/radar">Radar</a>
-  </nav>
-  <div style="display:flex;align-items:center;gap:10px;">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#a29bfe"/>
+            <stop offset="100%" stop-color="#6c5ce7"/>
+          </linearGradient>
+        </defs>
+        <circle cx="14" cy="14" r="9" fill="none" stroke="url(#sg)" stroke-width="2"/>
+        <line x1="21" y1="21" x2="28" y2="28" stroke="url(#sg)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="14" cy="14" r="3" fill="#a29bfe" opacity="0.5"/>
+      </svg>
+    </div>
+    <span>Koels.site</span>
     <span class="beta-badge">BETA</span>
   </div>
 </header>
