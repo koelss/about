@@ -566,11 +566,6 @@ function resetSearch() {
   document.getElementById('errorState').classList.remove('show');
 }
 
-/* ── Format UUID ── */
-function formatUUID(raw) {
-  return raw.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5');
-}
-
 /* ── Format date ── */
 function formatDate(ts) {
   if (!ts) return 'Original name';
@@ -597,20 +592,14 @@ async function doLookup() {
   btn.disabled = true;
 
   try {
-    // Step 1: Get UUID from username
-    const uuid = await fetchUUID(username);
-    if (!uuid) {
+    // Fetch all data from CORS-friendly API
+    const data = await fetchPlayerData(username);
+    if (!data) {
       showError('Player "' + username + '" not found');
       return;
     }
 
-    // Step 2: Get name history + skin data in parallel
-    const [names, profile] = await Promise.all([
-      fetchNameHistory(uuid),
-      fetchProfile(uuid)
-    ]);
-
-    renderProfile(username, uuid, names, profile);
+    renderProfile(data);
   } catch (err) {
     console.error(err);
     showError('Lookup failed. Try again.');
@@ -620,36 +609,12 @@ async function doLookup() {
   }
 }
 
-async function fetchUUID(username) {
-  const cacheKey = 'uuid:' + username.toLowerCase();
+async function fetchPlayerData(username) {
+  const cacheKey = 'player:' + username.toLowerCase();
   const cached = cacheGet(cacheKey);
   if (cached) return cached;
 
-  const res = await fetch('https://api.mojang.com/users/profiles/minecraft/' + encodeURIComponent(username));
-  if (!res.ok) return null;
-  const data = await res.json();
-  cacheSet(cacheKey, data.id);
-  return data.id;
-}
-
-async function fetchNameHistory(uuid) {
-  const cacheKey = 'names:' + uuid;
-  const cached = cacheGet(cacheKey);
-  if (cached) return cached;
-
-  const res = await fetch('https://api.mojang.com/user/profiles/' + uuid + '/names');
-  if (!res.ok) return [];
-  const data = await res.json();
-  cacheSet(cacheKey, data);
-  return data;
-}
-
-async function fetchProfile(uuid) {
-  const cacheKey = 'profile:' + uuid;
-  const cached = cacheGet(cacheKey);
-  if (cached) return cached;
-
-  const res = await fetch('https://sessionserver.mojang.com/session/minecraft/profile/' + uuid);
+  const res = await fetch('https://api.ashcon.app/mojang/v2/user/' + encodeURIComponent(username));
   if (!res.ok) return null;
   const data = await res.json();
   cacheSet(cacheKey, data);
@@ -661,58 +626,62 @@ function showError(msg) {
   document.getElementById('errorState').classList.add('show');
 }
 
-/* ── Decode skin texture URL from profile ── */
-function decodeSkins(profile) {
-  if (!profile || !profile.properties) return [];
-  const prop = profile.properties.find(p => p.name === 'textures');
-  if (!prop) return [];
-  try {
-    const decoded = JSON.parse(atob(prop.value));
-    const skins = [];
-    if (decoded.textures && decoded.textures.SKIN) {
-      const url = decoded.textures.SKIN.url;
-      const meta = decoded.textures.SKIN.metadata || {};
-      skins.push({ url, model: meta.model || 'default', isCurrent: true });
-    }
-    return skins;
-  } catch { return [] }
+/* ── Decode skin textures from ashcon API response ── */
+function decodeSkins(data) {
+  if (!data || !data.textures) return [];
+  const skins = [];
+  const t = data.textures;
+  
+  // Current skin
+  if (t.skin) {
+    skins.push({
+      url: t.skin.url,
+      model: t.skin.metadata?.model || 'default',
+      isCurrent: true
+    });
+  }
+  
+  // Previous skins (if available in username_history)
+  return skins;
 }
 
 /* ── Render ── */
-function renderProfile(username, uuid, names, profile) {
+function renderProfile(data) {
+  const { uuid, username } = data;
+  
   // Hide hero, show results
   document.getElementById('hero').style.display = 'none';
   document.getElementById('results').classList.add('show');
 
   // Current name
-  const currentName = names.length > 0 ? names[names.length - 1].name : username;
-  document.getElementById('currentName').textContent = currentName;
+  document.getElementById('currentName').textContent = username;
 
   // UUID
-  document.getElementById('uuidDisplay').textContent = formatUUID(uuid);
+  document.getElementById('uuidDisplay').textContent = uuid;
 
   // Account type (from skin metadata)
-  const skins = decodeSkins(profile);
+  const skins = decodeSkins(data);
   document.getElementById('accountType').textContent = skins.length > 0
     ? (skins[0].model === 'slim' ? 'Slim (Alex)' : 'Classic (Steve)')
     : 'Unknown';
 
-  // Skin head (using crafatar.com)
+  // Skin head
   document.getElementById('skinHead').src = 'https://crafatar.com/renders/head/' + uuid + '?overlay&size=120';
 
   // Name history
   const nameList = document.getElementById('nameHistoryList');
   nameList.innerHTML = '';
+  const names = data.username_history || [];
   names.slice().reverse().forEach((entry, i) => {
     const isCurrent = i === 0;
     const el = document.createElement('div');
     el.className = 'name-entry' + (isCurrent ? ' current' : '');
     el.innerHTML = `
       <div>
-        <span class="ne-name">${entry.name}${isCurrent ? '<span class="ne-badge">Current</span>' : ''}</span>
+        <span class="ne-name">${entry.username}${isCurrent ? '<span class="ne-badge">Current</span>' : ''}</span>
       </div>
       <div style="display:flex;align-items:center;">
-        <span class="ne-date">${formatDate(entry.changedToAt)}</span>
+        <span class="ne-date">${formatDate(entry.changed_at)}</span>
       </div>
     `;
     nameList.appendChild(el);
