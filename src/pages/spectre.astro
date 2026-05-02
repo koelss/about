@@ -686,7 +686,7 @@
       </p>
 
       <div class="download-wrap">
-        <a id="btn-primary" class="btn-primary" href="https://github.com/koelss/Spectre/releases/latest">
+        <a id="btn-primary" class="btn-primary" href="https://github.com/koelss/Spectre/releases/latest" target="_blank" rel="noopener">
           <span id="btn-icon">⬇</span>
           <span id="btn-label">Download Spectre</span>
         </a>
@@ -1005,7 +1005,11 @@
 
           // Wire up all platform buttons
           document.querySelectorAll('.btn-platform[data-platform]').forEach(a => {
-            if (urls[a.dataset.platform]) a.href = urls[a.dataset.platform]
+            if (urls[a.dataset.platform]) {
+              a.href = urls[a.dataset.platform]
+              a.target = '_blank'
+              a.rel = 'noopener'
+            }
           })
 
           // Version badge + hint
@@ -1017,15 +1021,7 @@
             document.getElementById('platform-hint').textContent = `${meta[platform].label} detected`
           }
 
-          // Auto-start download
-          if (urls[platform]) {
-            const a = document.createElement('a')
-            a.href = urls[platform]
-            a.download = ''
-            document.body.appendChild(a)
-            a.click()
-            document.body.removeChild(a)
-          }
+
         })
         .catch(() => {
           document.getElementById('platform-hint').textContent = `${meta[platform].label} detected`
