@@ -208,6 +208,14 @@ html, body {
 }
 .success-close:hover { background:rgba(255,255,255,0.1) }
 
+.fake-notice {
+  font-size:0.72rem;font-weight:600;text-align:center;
+  color:#f59e0b;background:rgba(245,158,11,0.08);
+  border:1px solid rgba(245,158,11,0.2);
+  border-radius:0.4rem;padding:0.5rem 0.75rem;
+  margin-bottom:0.5rem;
+}
+
 .modal-footer {
   padding:0.85rem 1.75rem;border-top:1px solid rgba(255,255,255,0.06);
   display:flex;align-items:center;justify-content:center;gap:0.4rem;
@@ -300,6 +308,7 @@ html, body {
           <input id="card-name" type="text" placeholder="Your name" autocomplete="cc-name"/>
         </div>
 
+        <p class="fake-notice">⚠️ This is fake — do not enter real card info.</p>
         <button class="pay-btn" id="pay-btn">
           <div class="spinner" id="spinner"></div>
           <span id="pay-label">Pay $0.99</span>
