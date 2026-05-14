@@ -471,8 +471,8 @@ async function checkMC() {
     const res = await fetch('https://mcapi.us/server/status?ip=koels.online', { cache:'no-store' });
     const ms  = Math.round(performance.now() - t0);
     const d   = await res.json();
-    setPing('mc', ms);
     if (d && d.online) {
+      setPing('mc', ms);
       const p = d.players;
       setBadge('mc', 'up', 'Online');
       document.querySelector('#svc-mc .svc-desc').textContent =
@@ -496,8 +496,8 @@ async function checkDiscord() {
     const res = await fetch('https://discord.com/api/guilds/1494858459785465896/widget.json', { cache:'no-store' });
     const ms  = Math.round(performance.now() - t0);
     const d   = await res.json();
-    setPing('discord', ms);
     if (d && d.name) {
+      setPing('discord', ms);
       setBadge('discord', 'up', 'Operational');
       document.querySelector('#svc-discord .svc-desc').textContent =
         `${d.presence_count ?? '—'} online`;
@@ -519,8 +519,8 @@ async function checkRadar() {
     const res = await fetch('https://api.rainviewer.com/public/weather-maps.json', { cache:'no-store' });
     const ms  = Math.round(performance.now() - t0);
     const d   = await res.json();
-    setPing('radar', ms);
     if (d && d.radar) {
+      setPing('radar', ms);
       setBadge('radar', 'up', 'Operational');
       return 'up';
     } else {
