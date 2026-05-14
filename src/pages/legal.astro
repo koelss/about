@@ -11,6 +11,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
+@view-transition { navigation: auto; }
+
 :root {
   --bg:      #020810;
   --bg2:     #040e1e;
@@ -81,6 +83,34 @@ nav a {
   color:var(--muted); text-transform:uppercase; transition:color 0.2s;
 }
 nav a:hover { color:var(--white) }
+
+/* ── HAMBURGER ── */
+.hamburger {
+  display:none; flex-direction:column; gap:5px; cursor:pointer;
+  padding:4px; background:none; border:none;
+}
+.hamburger span {
+  display:block; width:20px; height:1.5px;
+  background:var(--muted); border-radius:99px;
+  transition:transform 0.25s var(--ease), opacity 0.2s;
+}
+.hamburger.open span:nth-child(1) { transform:translateY(6.5px) rotate(45deg); background:var(--white) }
+.hamburger.open span:nth-child(2) { opacity:0 }
+.hamburger.open span:nth-child(3) { transform:translateY(-6.5px) rotate(-45deg); background:var(--white) }
+
+#mobile-menu {
+  display:none; position:fixed; top:58px; left:0; right:0; z-index:99;
+  background:rgba(2,8,16,0.97); border-bottom:1px solid var(--border);
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  flex-direction:column; padding:8px 0;
+}
+#mobile-menu.open { display:flex }
+#mobile-menu a {
+  font-family:var(--mono); font-size:0.72rem; letter-spacing:0.14em;
+  text-transform:uppercase; color:var(--muted);
+  padding:14px 24px; transition:color 0.2s, background 0.2s;
+}
+#mobile-menu a:hover { color:var(--white); background:rgba(64,200,255,0.04) }
 
 /* ── PAGE ── */
 .page-wrap {
@@ -233,6 +263,7 @@ footer {
 @media(max-width:700px) {
   header { padding:0 20px }
   nav { display:none }
+  .hamburger { display:flex }
   .page-wrap { padding:90px 20px 60px }
   footer { padding:20px; flex-direction:column; gap:10px; text-align:center }
   .data-table th, .data-table td { padding:10px 12px }
@@ -252,7 +283,14 @@ footer {
     <a href="/">Home</a>
     <a href="/links">Links</a>
   </nav>
+  <button class="hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
 </header>
+<div id="mobile-menu">
+  <a href="/" onclick="toggleMenu()">Home</a>
+  <a href="/links" onclick="toggleMenu()">Links</a>
+</div>
 
 <div class="page-wrap">
 
@@ -407,6 +445,11 @@ footer {
 </footer>
 
 <script is:inline>
+function toggleMenu() {
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
 const obs = new IntersectionObserver(
   es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') }),
   { threshold: 0.08 }
