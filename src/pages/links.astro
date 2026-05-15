@@ -269,14 +269,23 @@ html[data-theme="dark"] .card-username-text {
 }
 html[data-theme="dark"] .card-badge {
   display:inline-flex; align-items:center; gap:5px;
-  padding:3px 10px; border-radius:20px;
+  padding:3px 10px; border-radius:20px; line-height:1;
   border:1px solid rgba(64,200,255,0.15); background:rgba(0,140,220,0.06);
 }
 html[data-theme="dark"] .card-badge-label {
   font-family:"JetBrains Mono",monospace; font-size:0.58rem;
-  letter-spacing:0.1em; text-transform:uppercase;
+  letter-spacing:0.1em; text-transform:uppercase; line-height:1;
 }
 html[data-theme="dark"] #activity-rows { margin:0 14px; border-top:1px solid rgba(255,255,255,0.07); }
+
+#spotify-row, #game-row {
+  overflow:hidden;
+  max-height:0; opacity:0;
+  transition:max-height 0.35s ease, opacity 0.3s ease, padding 0.35s ease;
+  padding:0;
+}
+#spotify-row.sp-visible { max-height:160px; opacity:1; padding:10px 0 2px; }
+#game-row.gm-visible    { max-height:60px;  opacity:1; padding:10px 0 0; }
 html[data-theme="dark"] #spotify-song { font-family:"JetBrains Mono",monospace; font-size:0.65rem; color:#e8f5ff; }
 html[data-theme="dark"] #spotify-artist { font-family:"JetBrains Mono",monospace; font-size:0.6rem; color:rgba(64,200,255,0.45); }
 html[data-theme="dark"] .time-txt { font-family:"JetBrains Mono",monospace; font-size:0.55rem; color:rgba(232,245,255,0.38); }
@@ -596,7 +605,7 @@ html[data-theme="aero"] .footer {
 
     <div id="activity-rows" style="overflow:hidden;">
       <!-- spotify -->
-      <div id="spotify-row" style="display:none;padding:10px 0 2px;">
+      <div id="spotify-row">
         <!-- listening to label -->
         <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;">
           <span class="time-txt" style="letter-spacing:0.08em;text-transform:uppercase;font-size:0.52rem;opacity:0.7;">Listening to</span>
@@ -624,7 +633,7 @@ html[data-theme="aero"] .footer {
         </div>
       </div>
       <!-- game -->
-      <div id="game-row" style="display:none;padding:10px 0 0;">
+      <div id="game-row">
         <div style="display:flex;align-items:center;gap:8px;">
           <svg viewBox="0 0 24 24" style="width:12px;height:12px;fill:#a29bfe;flex-shrink:0;"><path d="M21 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-10 7H9v2H7v-2H5v-2h2V9h2v2h2v2zm4.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-3a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>
           <div>
@@ -874,12 +883,12 @@ function toggleMusic() {
         const artUrl = d.spotify.album_art_url;
         if(artUrl){ spArt.src=artUrl; spArt.style.display='block'; }
         else { spArt.style.display='none'; }
-        els.spRow.style.display='block';
+        els.spRow.classList.add('sp-visible');
         if(d.spotify.timestamps)startP(d.spotify.timestamps);
         any=true;
-      } else { els.spRow.style.display='none'; stopP(); }
+      } else { els.spRow.classList.remove('sp-visible'); stopP(); }
       const gm=d.activities&&d.activities.find(a=>a.type===0);
-      if(gm){ els.gameName.textContent=gm.name; els.gameRow.style.display='block'; any=true; } else { els.gameRow.style.display='none'; }
+      if(gm){ els.gameName.textContent=gm.name; els.gameRow.classList.add('gm-visible'); any=true; } else { els.gameRow.classList.remove('gm-visible'); }
       els.actRows.style.paddingBottom=any?'12px':'0';
       const u=d.discord_user;
       if(u.global_name||u.display_name)els.name.textContent=u.global_name||u.display_name;
