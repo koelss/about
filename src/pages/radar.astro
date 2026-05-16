@@ -5,12 +5,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="description" content="Real-time weather radar with live severe weather alerts for the US, Europe, Canada, Australia, New Zealand, Japan, and more."/>
+<meta name="theme-color" content="#020810"/>
+<meta property="og:title" content="koels.site — Radar"/>
+<meta property="og:description" content="Real-time weather radar with live alerts worldwide."/>
+<meta property="og:type" content="website"/>
 <title>koels.site — Radar</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23020810'/%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%230078c8' stroke-width='0.8' opacity='0.4'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%230078c8' stroke-width='0.8' opacity='0.5'/%3E%3Ccircle cx='16' cy='16' r='5' fill='none' stroke='%2340c8ff' stroke-width='0.8' opacity='0.7'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%2340c8ff'/%3E%3Cline x1='16' y1='16' x2='27' y2='7' stroke='%2340c8ff' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='24' cy='9' r='2' fill='%2300ffcc'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
 <style is:global>
 @view-transition { navigation: auto; }
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -28,14 +34,6 @@ body { background:#020810; color:#c8f0ff; }
   backdrop-filter:blur(20px);
 }
 .header-left { display:flex; align-items:center; gap:14px; }
-.back-btn {
-  display:flex; align-items:center; gap:5px;
-  font-size:0.6rem; letter-spacing:0.12em; text-transform:uppercase;
-  color:rgba(200,240,255,0.4); text-decoration:none; transition:color 0.2s;
-}
-.back-btn:hover { color:#c8f0ff; }
-.back-btn svg { width:13px; height:13px; fill:currentColor; }
-.hdiv { width:1px; height:16px; background:rgba(255,255,255,0.1); }
 .radar-logo { display:flex; align-items:center; gap:9px; }
 .radar-logo-icon { width:30px; height:30px; flex-shrink:0; }
 .radar-logo-icon svg { width:100%; height:100%; }
@@ -46,6 +44,7 @@ body { background:#020810; color:#c8f0ff; }
   display:flex; align-items:center; gap:5px; padding:4px 11px; border-radius:999px;
   font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase;
   border:1px solid rgba(255,71,87,0.3); background:rgba(255,71,87,0.08); color:#ff4757;
+  -webkit-tap-highlight-color:transparent;
 }
 .alert-pill.none { border-color:rgba(255,255,255,0.08); background:transparent; color:rgba(200,240,255,0.3); }
 .alert-pill svg { width:9px; height:9px; fill:currentColor; }
@@ -58,8 +57,9 @@ body { background:#020810; color:#c8f0ff; }
 /* BETA DISCLAIMER MODAL */
 #beta-overlay {
   position:fixed; inset:0; z-index:9999;
-  background:rgba(3,3,10,0.85); -webkit-backdrop-filter:blur(12px);
-  background:rgba(3,3,10,0.85); backdrop-filter:blur(12px);
+  background:rgba(3,3,10,0.85);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
   display:flex; align-items:center; justify-content:center;
   padding:20px;
 }
@@ -107,6 +107,7 @@ body { background:#020810; color:#c8f0ff; }
   display:flex; flex-direction:column;
   transform:translateX(100%); transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
   box-shadow:-8px 0 40px rgba(0,0,0,0.4);
+  will-change:transform;
 }
 #panel.open { transform:translateX(0); }
 #panel-toggle {
@@ -115,7 +116,9 @@ body { background:#020810; color:#c8f0ff; }
   background:rgba(5,4,18,0.95); border:1px solid rgba(0,120,200,0.2); border-right:none;
   border-radius:6px 0 0 6px; display:flex; align-items:center; justify-content:center;
   cursor:pointer; transition:all 0.2s; opacity:0; pointer-events:none;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
 }
+#panel-toggle:focus-visible { outline:2px solid #40c8ff; outline-offset:-2px; }
 #panel-toggle.has-alerts { opacity:0.6; pointer-events:auto; }
 #panel-toggle.has-alerts:hover { background:rgba(0,120,200,0.25); opacity:1; }
 #panel-toggle svg { width:11px; height:11px; fill:rgba(162,155,254,0.7); transition:transform 0.3s; }
@@ -316,8 +319,10 @@ body { background:#020810; color:#c8f0ff; }
   background:rgba(0,120,200,0.2); border:1.5px solid rgba(0,120,200,0.5);
   display:flex; align-items:center; justify-content:center;
   cursor:pointer; transition:all 0.18s;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
 }
 #play-btn:hover { background:rgba(0,120,200,0.45); transform:scale(1.06); }
+#play-btn:focus-visible { outline:2px solid #40c8ff; outline-offset:2px; }
 #play-btn svg { width:12px; height:12px; fill:#40c8ff; }
 #time-display {
   flex:1; text-align:center;
@@ -333,19 +338,23 @@ body { background:#020810; color:#c8f0ff; }
 #scrubber-track {
   width:100%; height:5px; border-radius:999px;
   background:rgba(255,255,255,0.1); position:relative; cursor:pointer;
+  /* Expanded touch target without changing visual height */
+  touch-action:none;
+  padding:10px 0; margin:-10px 0; box-sizing:content-box;
 }
 #scrubber-fill {
-  height:100%; border-radius:999px;
+  height:5px; border-radius:999px;
   background:linear-gradient(90deg,#0078c8,#40c8ff,#00ffcc);
   width:0%; pointer-events:none; transition:width 0.05s;
 }
 #scrubber-thumb {
-  position:absolute; top:50%; left:0%;
+  position:absolute; top:5px; left:0%;
   width:14px; height:14px; border-radius:50%;
   background:#40c8ff; border:2px solid #fff;
   box-shadow:0 0 8px rgba(162,155,254,0.7);
   transform:translate(-50%,-50%);
   pointer-events:none;
+  will-change:left;
 }
 #scrubber-ticks {
   display:flex; justify-content:space-between;
@@ -380,8 +389,10 @@ body { background:#020810; color:#c8f0ff; }
   display:flex; align-items:center; justify-content:center;
   transition:all 0.2s; -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px);
   box-shadow:0 4px 16px rgba(0,0,0,0.4);
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
 }
 #locate-btn:hover { background:rgba(0,120,200,0.3); border-color:rgba(0,120,200,0.6); transform:scale(1.05); }
+#locate-btn:focus-visible { outline:2px solid #40c8ff; outline-offset:2px; }
 #locate-btn svg { width:18px; height:18px; }
 #locate-btn.locating svg circle { animation: pulse-ring-stroke 1s ease-out infinite; }
 @keyframes pulse-ring-stroke {
@@ -393,7 +404,7 @@ body { background:#020810; color:#c8f0ff; }
 /* SEARCH BAR */
 #search-container {
   position:fixed; top:64px; left:50%; transform:translateX(-50%);
-  z-index:1000; width:min(400px, calc(100vw - 40px));
+  z-index:1000; width:min(400px, calc(100vw - 116px));
 }
 #search-input {
   width:100%; padding:9px 14px 9px 36px; border-radius:10px;
@@ -440,8 +451,12 @@ body { background:#020810; color:#c8f0ff; }
 #weather-widget.show { display:block; }
 .ww-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
 .ww-location-name { font-size:0.58rem; color:rgba(200,240,255,0.4); letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px; }
-.ww-close-btn { font-size:0.7rem; color:rgba(200,240,255,0.2); cursor:pointer; line-height:1; padding:0 2px; }
+.ww-close-btn {
+  font-size:0.7rem; color:rgba(200,240,255,0.2); cursor:pointer; line-height:1; padding:2px 4px;
+  background:none; border:none; touch-action:manipulation;
+}
 .ww-close-btn:hover { color:#c8f0ff; }
+.ww-close-btn:focus-visible { outline:1px solid rgba(0,120,200,0.6); border-radius:2px; }
 .ww-current { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
 .ww-temp { font-size:2.2rem; font-weight:700; color:#c8f0ff; line-height:1; }
 .ww-temp-unit { font-size:0.7rem; color:rgba(200,240,255,0.4); vertical-align:super; }
@@ -486,6 +501,33 @@ body { background:#020810; color:#c8f0ff; }
   padding:7px 10px !important; box-shadow:0 4px 20px rgba(0,0,0,0.5) !important;
 }
 
+/* Panel backdrop — hidden globally, shown on mobile when panel is open */
+#panel-backdrop {
+  display:none; position:fixed; inset:0; z-index:899;
+  background:rgba(0,0,0,0.5);
+}
+
+/* ── TABLET (641px – 1024px) ─────────────────────────────────────────────── */
+@media (min-width: 641px) and (max-width: 1024px) {
+  #panel { width:320px; }
+  #panel.open ~ #panel-toggle { right:320px; }
+  #search-container { width:min(340px, calc(100vw - 100px)); }
+  #timeline { width:min(460px, calc(100vw - 60px)); }
+}
+
+/* ── ULTRAWIDE (≥1600px) ─────────────────────────────────────────────────── */
+@media (min-width: 1600px) {
+  #panel { width:400px; }
+  #panel.open ~ #panel-toggle { right:400px; }
+  #legend { padding:12px 28px; gap:20px; }
+  .legend-label { font-size:0.72rem; }
+  .legend-dot { width:12px; height:12px; }
+  #timeline { width:min(640px, calc(100vw - 32px)); }
+  #header { height:58px; padding:0 28px; }
+  .radar-logo-main { font-size:0.78rem; }
+  #panel { top:58px; }
+}
+
 /* ── MOBILE ─────────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
 
@@ -507,8 +549,8 @@ body { background:#020810; color:#c8f0ff; }
   #locate-btn { top:56px; right:8px; width:32px; height:32px; }
   #locate-btn svg { width:16px; height:16px; }
 
-  /* Search bar */
-  #search-container { top:56px; width:min(320px, calc(100vw - 24px)); }
+  /* Search bar — leave room for locate button on the right */
+  #search-container { top:56px; left:12px; right:58px; width:auto; transform:none; }
   #search-input { padding:8px 12px 8px 32px; font-size:0.6rem; border-radius:8px; }
   #search-icon { width:14px; height:14px; left:9px; }
   #search-results { border-radius:8px; max-height:180px; }
@@ -516,9 +558,9 @@ body { background:#020810; color:#c8f0ff; }
   .search-result-name { font-size:0.58rem; }
   .search-result-sub { font-size:0.44rem; }
 
-  /* Weather widget */
+  /* Weather widget — positioned above timeline, not over search */
   #weather-widget {
-    top:56px; left:8px; right:8px; min-width:auto; max-width:none;
+    top:auto; bottom:148px; left:8px; right:8px; min-width:auto; max-width:none;
     border-radius:8px; padding:10px 12px;
   }
   .ww-location-name { max-width:200px; font-size:0.52rem; }
@@ -528,13 +570,15 @@ body { background:#020810; color:#c8f0ff; }
   /* Panel — slides up from bottom, full width */
   #panel {
     top:auto; bottom:0; left:0; right:0; width:100%;
-    height:68vh; border-left:none; border-top:1px solid rgba(0,120,200,0.2);
+    height:65dvh; max-height:calc(100dvh - 48px);
+    border-left:none; border-top:1px solid rgba(0,120,200,0.2);
     border-radius:16px 16px 0 0;
     transform:translateY(100%);
     transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
     box-shadow:0 -8px 40px rgba(0,0,0,0.5);
   }
   #panel.open { transform:translateY(0); }
+  #panel.open ~ #panel-backdrop { display:block; }
 
   /* Drag handle */
   .panel-header::before {
@@ -582,12 +626,17 @@ body { background:#020810; color:#c8f0ff; }
   #beta-modal { padding:24px 20px; border-radius:12px; }
   .beta-modal-title { font-size:0.85rem; }
 
-  /* Backdrop */
-  #panel-backdrop {
-    display:none; position:fixed; inset:0; z-index:899;
-    background:rgba(0,0,0,0.5);
-  }
-  #panel.open ~ #panel-backdrop { display:block; }
+  /* Radar status toast nudge */
+  #radar-status { top:56px; }
+}
+
+/* ── VERY SMALL (≤380px) ─────────────────────────────────────────────────── */
+@media (max-width: 380px) {
+  #timeline { padding:8px 10px 10px; }
+  #time-display { font-size:0.5rem; }
+  .tick-label { font-size:0.38rem; }
+  .legend-title { display:none; }
+  .legend-items { gap:6px; }
 }
 
 /* iOS performance: disable backdrop-filter blur on mobile to prevent GPU crash */
@@ -606,10 +655,12 @@ body { background:#020810; color:#c8f0ff; }
 </head>
 <body>
 
+<noscript><style>#beta-overlay{display:none}</style><div style="position:fixed;inset:0;z-index:9999;background:#020810;display:flex;align-items:center;justify-content:center;color:#c8f0ff;font-family:system-ui,sans-serif;text-align:center;padding:24px"><div><p style="font-size:1.2rem;font-weight:700;margin-bottom:8px">JavaScript Required</p><p style="font-size:0.8rem;opacity:0.5">This radar page requires JavaScript to function.</p></div></div></noscript>
+
 <div id="beta-overlay">
-  <div id="beta-modal">
+  <div id="beta-modal" role="dialog" aria-modal="true" aria-labelledby="beta-title">
     <div class="beta-modal-icon">🚧</div>
-    <div class="beta-modal-title">This site is in Beta</div>
+    <div class="beta-modal-title" id="beta-title">This site is in Beta</div>
     <div class="beta-modal-sub">koels.site — Radar</div>
     <div class="beta-modal-body">
       Some features on this page are <b>not fully functional</b> yet. You may encounter bugs or incomplete behavior.<br><br>
@@ -636,12 +687,12 @@ body { background:#020810; color:#c8f0ff; }
 <div id="radar-status">Loading radar…</div>
 
 <!-- LOCATE ME BUTTON -->
-<div id="locate-btn" onclick="locateMe()" title="Go to my location">
+<button id="locate-btn" type="button" aria-label="Go to my location">
   <svg viewBox="0 0 24 24" fill="none" stroke="rgba(162,155,254,0.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="3"/>
     <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
   </svg>
-</div>
+</button>
 
 <!-- SEARCH BAR -->
 <div id="search-container">
@@ -654,7 +705,7 @@ body { background:#020810; color:#c8f0ff; }
 <div id="weather-widget">
   <div class="ww-header">
     <span class="ww-location-name" id="ww-loc-name">—</span>
-    <span class="ww-close-btn" onclick="closeWeather()">✕</span>
+    <button class="ww-close-btn" type="button" aria-label="Close weather widget">✕</button>
   </div>
   <div class="ww-current">
     <span class="ww-icon" id="ww-icon">🌡️</span>
@@ -705,15 +756,15 @@ body { background:#020810; color:#c8f0ff; }
     </div>
   </div>
   <div class="header-right">
-    <div class="alert-pill none" id="alert-pill" onclick="togglePanel()" style="cursor:pointer">
-      <svg viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
-      <span id="alert-num">0</span>&nbsp;Alerts
+    <div class="alert-pill none" id="alert-pill" role="button" tabindex="0" aria-label="Toggle weather alerts panel" aria-expanded="false" style="cursor:pointer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2L1 21h22L12 2zm0 3.5L20.5 19h-17L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>
+      <span id="alert-num" aria-live="polite" aria-atomic="true">0</span>&nbsp;Alerts
     </div>
     <div id="last-updated">—</div>
   </div>
 </div>
 
-<div id="panel">
+<div id="panel" role="complementary" aria-label="Weather alerts">
   <div class="panel-header">
     <span class="panel-header-title">Active Alerts</span>
     <span class="panel-header-count" id="panel-count">0</span>
@@ -731,9 +782,9 @@ body { background:#020810; color:#c8f0ff; }
   </div>
   <div id="alerts-list"><div class="no-alerts">Loading alerts…</div></div>
 </div>
-<div id="panel-toggle" onclick="togglePanel()">
+<button id="panel-toggle" type="button" aria-label="Toggle alerts panel" aria-expanded="false">
   <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
-</div>
+</button>
 <div id="panel-backdrop" onclick="togglePanel()"></div>
 
 <div id="legend">
@@ -748,10 +799,10 @@ body { background:#020810; color:#c8f0ff; }
 
 <div id="timeline">
   <div class="tl-row1">
-    <div id="play-btn" onclick="togglePlay()">
+    <button id="play-btn" type="button" aria-label="Play timeline animation" aria-pressed="false">
       <svg id="play-icon"  viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
       <svg id="pause-icon" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-    </div>
+    </button>
     <div id="time-display">
       <span class="t-time">--:-- --</span>
       <span class="t-sep">·</span>
@@ -775,13 +826,13 @@ window.addEventListener('DOMContentLoaded', function() {
 const map = L.map('map', {
   center: [37, -95], zoom: 4,
   zoomControl: true,
-  preferCanvas: false
+  preferCanvas: true  // SVG → Canvas for alert polygons; much faster at scale
 });
 
 // CartoDB Dark Matter — free, no API key
 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
   attribution: '© OpenStreetMap contributors © CARTO',
-  subdomains: 'abcd', maxZoom: 19, maxNativeZoom: 20
+  subdomains: 'abcd', maxZoom: 19, maxNativeZoom: 19
 }).addTo(map);
 
 // Force map to recalculate its size — fixes black map on mobile
@@ -861,7 +912,6 @@ let seqId      = 0;
 let activeRV   = null;
 let activeIEM  = null;
 let rvHost     = '';  // store RainViewer host for reloading
-const loadedFrames = new Set();
 
 // ── REGIONAL WMS OVERLAYS ───────────────────────────────────────────────
 let wmsCanada = null;
@@ -1020,7 +1070,6 @@ async function loadRadar() {
       try { map.removeLayer(f.rvLayer);  } catch(e){}
       try { map.removeLayer(f.iemLayer); } catch(e){}
     });
-    loadedFrames.clear();
     activeRV = null; activeIEM = null;
 
     const nowSec = Math.floor(Date.now() / 1000);
@@ -1057,10 +1106,9 @@ async function loadRadar() {
     buildTicks();
 
     // Preload ALL frames
-    frames.forEach((f, i) => {
+    frames.forEach(f => {
       f.rvLayer.addTo(map);
       f.iemLayer.addTo(map);
-      loadedFrames.add(i);
     });
 
     // Show latest frame then autoplay
@@ -1157,6 +1205,8 @@ function buildTicks() {
 function setPlayIcon(on) {
   document.getElementById('play-icon').style.display  = on ? 'none' : '';
   document.getElementById('pause-icon').style.display = on ? ''     : 'none';
+  document.getElementById('play-btn').setAttribute('aria-pressed', on ? 'true' : 'false');
+  document.getElementById('play-btn').setAttribute('aria-label',   on ? 'Pause timeline animation' : 'Play timeline animation');
 }
 
 function _next(id, idx, delay) {
@@ -1436,11 +1486,21 @@ async function fetchNZAlerts() {
   } catch(e) { return []; }
 }
 
-// ── SOUTH AMERICA — GDACS / ReliefWeb global alerts (no key) ──────────────
+// ── GDACS shared fetch — one request reused by SA, JP, and IN ─────────────
+let _gdacsPromise = null;
+async function getGDACS() {
+  if (!_gdacsPromise) {
+    _gdacsPromise = fetch('https://www.gdacs.org/gdacs/api/gdacsAlerts')
+      .then(r => r.json())
+      .catch(() => ({ alerts: [] }));
+  }
+  return _gdacsPromise;
+}
+
+// ── SOUTH AMERICA ──────────────────────────────────────────────────────────
 async function fetchSouthAmericaAlerts() {
   try {
-    const url = 'https://www.gdacs.org/gdacs/api/gdacsAlerts';
-    const data = await (await fetch(url)).json();
+    const data = await getGDACS();
     return (data.alerts || [])
       .filter(a => {
         const saCountries = ['BR','AR','CL','CO','PE','VE','EC','BO','PY','UY','GY','SR','GF','FK'];
@@ -1476,11 +1536,10 @@ async function fetchSouthAmericaAlerts() {
   } catch(e) { return []; }
 }
 
-// ── JAPAN — JMA (Japan Meteorological Agency) via GDACS ───────────────────
+// ── JAPAN — JMA via GDACS ──────────────────────────────────────────────────
 async function fetchJapanAlerts() {
   try {
-    const gdacsUrl = 'https://www.gdacs.org/gdacs/api/gdacsAlerts';
-    const data = await (await fetch(gdacsUrl)).json();
+    const data = await getGDACS();
     return (data.alerts || [])
       .filter(a => (a.country || '').includes('JP') || (a.location || '').toLowerCase().includes('japan'))
       .map(a => {
@@ -1510,11 +1569,10 @@ async function fetchJapanAlerts() {
   } catch(e) { return []; }
 }
 
-// ── INDIA — IMD warnings via GDACS ────────────────────────────────────────
+// ── INDIA — IMD via GDACS ──────────────────────────────────────────────────
 async function fetchIndiaAlerts() {
   try {
-    const url = 'https://www.gdacs.org/gdacs/api/gdacsAlerts';
-    const data = await (await fetch(url)).json();
+    const data = await getGDACS();
     return (data.alerts || [])
       .filter(a => (a.country || '').includes('IN') || (a.location || '').toLowerCase().includes('india'))
       .map(a => {
@@ -1612,6 +1670,7 @@ async function fetchNHCAlerts() {
 // + South America (GDACS) + Japan (JMA/GDACS) + India (IMD/GDACS)
 // + US SPC (Storm Prediction Center watches) + US NHC (National Hurricane Center)
 async function loadAlerts() {
+  _gdacsPromise = null; // Reset cache so each load cycle fetches fresh data
   alertLayers.forEach(l => { try { map.removeLayer(l); } catch(e){} });
   alertLayers = [];
 
@@ -1867,8 +1926,12 @@ async function fetchEUAlerts() {
 }
 
 function togglePanel() {
-  const panel = document.getElementById('panel');
-  panel.classList.toggle('open');
+  const panel   = document.getElementById('panel');
+  const toggle  = document.getElementById('panel-toggle');
+  const pill    = document.getElementById('alert-pill');
+  const isOpen  = panel.classList.toggle('open');
+  toggle.setAttribute('aria-expanded', isOpen);
+  pill.setAttribute('aria-expanded',   isOpen);
 }
 window.togglePanel = togglePanel;
 
@@ -2130,9 +2193,62 @@ window.acknowledgeBeta = function() {
   setInterval(loadAlerts, 60000);
 };
 
-// ── BETA DISCLAIMER handled inline on the modal button ───────────────────
-
+// ── BUTTON WIRING ─────────────────────────────────────────────────────────
+document.getElementById('locate-btn').addEventListener('click', locateMe);
+document.getElementById('play-btn').addEventListener('click', togglePlay);
+document.getElementById('panel-toggle').addEventListener('click', togglePanel);
+document.getElementById('alert-pill').addEventListener('click', togglePanel);
+document.getElementById('alert-pill').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePanel(); }
 });
+
+// Close weather widget button
+document.querySelector('.ww-close-btn').addEventListener('click', closeWeather);
+
+// Unit toggle buttons
+document.getElementById('ww-toggle-c').addEventListener('click', () => setUnit('C'));
+document.getElementById('ww-toggle-f').addEventListener('click', () => setUnit('F'));
+
+// ── KEYBOARD NAVIGATION ───────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  // Space = play/pause (only when not focused on an input)
+  if (e.key === ' ' && e.target.tagName !== 'INPUT') {
+    e.preventDefault();
+    togglePlay();
+    return;
+  }
+  // Arrow keys = scrub timeline
+  if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && frames.length) {
+    e.preventDefault();
+    if (playing) stopPlay();
+    const delta = e.key === 'ArrowRight' ? 1 : -1;
+    showFrame(currentIdx + delta);
+  }
+  // Escape = close panel
+  if (e.key === 'Escape') {
+    const panel = document.getElementById('panel');
+    if (panel.classList.contains('open')) togglePanel();
+  }
+});
+
+// ── ORIENTATION CHANGE ────────────────────────────────────────────────────
+const handleOrientationChange = () => {
+  // Short delay lets the browser settle the new viewport dimensions
+  setTimeout(() => {
+    map.invalidateSize({ animate: false });
+    if (frames.length) {
+      if (activeRV && map.hasLayer(activeRV)) activeRV.redraw();
+    }
+  }, 300);
+};
+
+if (screen.orientation) {
+  screen.orientation.addEventListener('change', handleOrientationChange);
+} else {
+  window.addEventListener('orientationchange', handleOrientationChange);
+}
+
+});  // end DOMContentLoaded
 </script>
 </body>
 </html>
