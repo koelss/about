@@ -11,7 +11,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    @view-transition { navigation: auto; }
+    @supports (view-transition-name: none) {
+      @view-transition { navigation: auto; }
+    }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -176,16 +178,26 @@ const imageView    = document.getElementById('image-view');
 const emptyState   = document.getElementById('empty-state');
 const displayedImg = document.getElementById('displayed-img');
 
-displayedImg.addEventListener('load', () => {
-  if (displayedImg.naturalWidth > 0) {
-    imageView.classList.add('visible');
-    emptyState.classList.remove('visible');
-  }
-});
-displayedImg.addEventListener('error', () => {
+function showImage() {
+  imageView.classList.add('visible');
+  emptyState.classList.remove('visible');
+}
+function showEmpty() {
   imageView.classList.remove('visible');
   emptyState.classList.add('visible');
-});
+}
+
+// The image may have already loaded/errored before this script runs,
+// so check .complete first before attaching listeners.
+if (displayedImg.complete) {
+  if (displayedImg.naturalWidth > 0) showImage();
+  else showEmpty();
+} else {
+  displayedImg.addEventListener('load', function() {
+    if (displayedImg.naturalWidth > 0) showImage(); else showEmpty();
+  });
+  displayedImg.addEventListener('error', showEmpty);
+}
 </script>
 
 </body>
