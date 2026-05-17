@@ -20,6 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://esm.sh" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://threejs.org" crossorigin>
 <link rel="preconnect" href="https://earthquake.usgs.gov" crossorigin>
 <link rel="preconnect" href="https://eonet.gsfc.nasa.gov" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -149,6 +150,28 @@ button {
   font-size: 0.86rem;
   font-weight: 700;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.beta-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 214, 94, 0.22);
+  background: rgba(255, 214, 94, 0.12);
+  color: #ffd75e;
+  font-family: var(--mono);
+  font-size: 0.46rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
@@ -861,7 +884,10 @@ button {
       </span>
       <span class="brand-copy">
         <span class="brand-kicker">koels.site / live globe</span>
-        <span class="brand-title">Earth Signals</span>
+        <span class="brand-row">
+          <span class="brand-title">Earth Signals</span>
+          <span class="beta-badge">Beta</span>
+        </span>
       </span>
     </a>
 
@@ -1020,17 +1046,31 @@ scene.add(rimLight);
 
 const earthRadius = 3.15;
 const markerRadius = 3.28;
+const textureLoader = new THREE.TextureLoader();
+textureLoader.setCrossOrigin('anonymous');
 const globeMaterial = new THREE.MeshPhongMaterial({
-  color: 0x071223,
+  color: 0xffffff,
   emissive: 0x061426,
-  emissiveIntensity: 0.9,
-  shininess: 28,
-  specular: 0x0f2740,
+  emissiveIntensity: 0.42,
+  shininess: 18,
+  specular: 0x1d4b70,
   transparent: true,
   opacity: 0.98
 });
 const earth = new THREE.Mesh(new THREE.SphereGeometry(earthRadius, 96, 96), globeMaterial);
 globeGroup.add(earth);
+
+const cloudMaterial = new THREE.MeshLambertMaterial({
+  color: 0xffffff,
+  transparent: true,
+  opacity: 0.18,
+  depthWrite: false
+});
+const clouds = new THREE.Mesh(
+  new THREE.SphereGeometry(earthRadius * 1.018, 96, 96),
+  cloudMaterial
+);
+globeGroup.add(clouds);
 
 const halo = new THREE.Mesh(
   new THREE.SphereGeometry(earthRadius * 1.075, 96, 96),
@@ -1131,6 +1171,32 @@ function makeGrid() {
 }
 
 makeGrid();
+
+async function loadEarthTextures() {
+  const [surfaceMap, specularMap, normalMap, cloudMap] = await Promise.all([
+    textureLoader.loadAsync('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+    textureLoader.loadAsync('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg'),
+    textureLoader.loadAsync('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg'),
+    textureLoader.loadAsync('https://threejs.org/examples/textures/planets/earth_clouds_1024.png')
+  ]);
+
+  [surfaceMap, specularMap, normalMap, cloudMap].forEach(texture => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  });
+
+  normalMap.colorSpace = THREE.NoColorSpace;
+  specularMap.colorSpace = THREE.NoColorSpace;
+
+  globeMaterial.map = surfaceMap;
+  globeMaterial.specularMap = specularMap;
+  globeMaterial.normalMap = normalMap;
+  globeMaterial.normalScale = new THREE.Vector2(0.8, 0.8);
+  globeMaterial.needsUpdate = true;
+
+  cloudMaterial.map = cloudMap;
+  cloudMaterial.needsUpdate = true;
+}
 
 function latLonToVector3(lat, lon, radius) {
   const phi = (90 - lat) * Math.PI / 180;
@@ -1302,7 +1368,7 @@ async function fetchQuakes() {
         ].filter(Boolean),
         sourceLinks: [
           { label: 'USGS event', url: props.url || 'https://earthquake.usgs.gov/' },
-          { label: 'USGS feed', url: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php' }
+          ...(props.detail ? [{ label: 'USGS event data', url: props.detail }] : [])
         ]
       };
     });
@@ -1579,6 +1645,7 @@ renderer.domElement.addEventListener('click', event => {
 
 let coastlinesLoaded = false;
 async function init() {
+  await loadEarthTextures();
   if (!coastlinesLoaded) {
     await addLandOutlines();
     coastlinesLoaded = true;
@@ -1630,6 +1697,8 @@ function animate() {
     const pulse = 1 + Math.sin(elapsed * 2.2 + index * 0.35) * 0.12;
     entry.sprite.scale.setScalar(entry.baseScale * pulse);
   });
+
+  clouds.rotation.y += 0.00018;
 
   if (focusVector) {
     camera.position.lerp(focusVector, 0.055);
