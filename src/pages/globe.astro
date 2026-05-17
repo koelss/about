@@ -959,7 +959,7 @@ button {
     overflow: hidden;
   }
   #globe-canvas {
-    transform: translateY(-3svh) scale(0.96);
+    transform: none;
     transform-origin: center center;
   }
   .topbar {
@@ -1024,14 +1024,7 @@ button {
     width: 16px;
     height: 16px;
   }
-  .hud {
-    top: calc(var(--safe-top) + 64px);
-    bottom: auto;
-    left: 16px;
-    right: 16px;
-    width: auto;
-    gap: 0;
-  }
+  .hud { display: none; }
   .hud-card:first-child { display: none; }
   .hud-card {
     padding: 0;
@@ -1058,7 +1051,7 @@ button {
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
   }
-  .stat-label {
+  .stat .stat-label {
     display: none;
   }
   .stat-value {
@@ -1078,7 +1071,7 @@ button {
     left: 0;
     right: 0;
     bottom: 0;
-    height: min(40svh, 330px);
+    height: min(35svh, 300px);
     border-left: 0;
     border-right: 0;
     border-bottom: 0;
@@ -1098,7 +1091,7 @@ button {
     font-size: 0.9rem;
   }
   .panel-updated {
-    font-size: 0.48rem;
+    display: none;
   }
   .filter-row {
     margin-top: 10px;
@@ -1162,7 +1155,10 @@ button {
   .event-sub:last-child {
     display: none;
   }
-  .detail-grid { grid-template-columns: 1fr; }
+  .detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
   .detail-overlay {
     align-items: end;
     place-items: end stretch;
@@ -1171,7 +1167,7 @@ button {
   }
   .detail-modal {
     width: 100%;
-    max-height: 82svh;
+    max-height: 78svh;
     border-left: 0;
     border-right: 0;
     border-bottom: 0;
@@ -1195,12 +1191,13 @@ button {
     padding: 14px 16px calc(var(--safe-bottom) + 18px);
   }
   .detail-stat {
-    padding: 11px 12px;
+    padding: 10px 11px;
     border-radius: 14px;
     min-width: 0;
   }
   .detail-stat-value {
-    font-size: 0.96rem;
+    margin-top: 6px;
+    font-size: 0.86rem;
     line-height: 1.25;
     overflow-wrap: anywhere;
   }
@@ -1228,9 +1225,7 @@ button {
     overflow-wrap: anywhere;
   }
   .status-toast {
-    top: calc(var(--safe-top) + 92px);
-    max-width: calc(100vw - 32px);
-    text-align: center;
+    display: none;
   }
 }
 
@@ -1429,11 +1424,22 @@ const filterButtons = [...document.querySelectorAll('.chip[data-filter]')];
 const recenterBtn = document.getElementById('recenter-btn');
 const autospinBtn = document.getElementById('autospin-btn');
 
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 640px)').matches;
+}
+
+function viewportCameraConfig() {
+  return isMobileViewport()
+    ? { fov: 38, cameraZ: 16.2, focusDistance: 14.8, minDistance: 11.2, maxDistance: 26 }
+    : { fov: 42, cameraZ: 11.5, focusDistance: 10.4, minDistance: 7.2, maxDistance: 20 };
+}
+
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x020810, 0.028);
 
-const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(0, 0, 11.5);
+const initialCameraConfig = viewportCameraConfig();
+const camera = new THREE.PerspectiveCamera(initialCameraConfig.fov, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 0, initialCameraConfig.cameraZ);
 
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -1453,8 +1459,8 @@ controls.enablePan = false;
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.rotateSpeed = 0.6;
-controls.minDistance = 7.2;
-controls.maxDistance = 20;
+controls.minDistance = initialCameraConfig.minDistance;
+controls.maxDistance = initialCameraConfig.maxDistance;
 controls.target.set(0, 0, 0);
 let userInteracting = false;
 controls.addEventListener('start', () => { userInteracting = true; });
@@ -1681,10 +1687,20 @@ let markerEntries = [];
 let selectedId = null;
 let autoSpin = true;
 let focusVector = null;
-let focusDistance = 10.4;
+let focusDistance = initialCameraConfig.focusDistance;
 let refreshTimer = null;
 let eventSearchTerm = '';
 const detailCache = new Map();
+
+function applyViewportCameraSizing() {
+  const config = viewportCameraConfig();
+  camera.fov = config.fov;
+  camera.position.setLength(config.cameraZ);
+  controls.minDistance = config.minDistance;
+  controls.maxDistance = config.maxDistance;
+  focusDistance = config.focusDistance;
+  camera.updateProjectionMatrix();
+}
 
 try {
   if (localStorage.getItem('globe_beta_dismissed') === '1') {
@@ -2378,6 +2394,7 @@ function animate() {
 function handleResize() {
   const width = window.innerWidth;
   const height = window.innerHeight;
+  applyViewportCameraSizing();
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
