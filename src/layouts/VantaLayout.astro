@@ -4,6 +4,8 @@ interface Props {
   description?: string;
 }
 
+import '../styles/tailwind.css';
+
 const {
   title       = 'Vanta — Competitive Valorant Insights',
   description = 'Track your rank, analyze your stats, and review match history — all in a clean, lightweight desktop app.',
@@ -29,6 +31,10 @@ const {
   <meta property="og:title"       content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:type"        content="website" />
+  <meta property="og:image"       content="https://koels.site/og.png" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:image"      content="https://koels.site/og.png" />
+  <link rel="canonical" href="https://koels.site/vanta" />
 
   <style is:global>
     :root {
