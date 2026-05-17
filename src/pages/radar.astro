@@ -807,8 +807,8 @@ body { background:#020810; color:#c8f0ff; }
     <span class="ww-icon" id="ww-icon">🌡️</span>
     <div>
       <span class="ww-temp" id="ww-temp">--</span><span class="ww-temp-unit" id="ww-unit-label">°C</span>
-      <button class="ww-unit-toggle" id="ww-toggle-c" onclick="setUnit('C')">°C</button>
-      <button class="ww-unit-toggle" id="ww-toggle-f" onclick="setUnit('F')">°F</button>
+      <button class="ww-unit-toggle" id="ww-toggle-c" type="button">°C</button>
+      <button class="ww-unit-toggle" id="ww-toggle-f" type="button">°F</button>
     </div>
   </div>
   <div class="ww-details">
@@ -1384,6 +1384,7 @@ window.addEventListener('touchend',  () => dragging = false);
 // ── GLOBAL ALERTS ─────────────────────────────────────────────────────────
 let alertLayers = [];
 let cachedAlerts = [];
+let alertsRefreshTimer = null;
 const SEV = { Extreme:'#ff00cc', Severe:'#ff2d2d', Moderate:'#ffa500', Minor:'#ffd600', Unknown:'rgba(255,255,255,0.3)' };
 const sevOrder = { Extreme:0, Severe:1, Moderate:2, Minor:3, Unknown:4 };
 const sevClass = s => 'sev-' + (s||'unknown').toLowerCase();
@@ -1824,6 +1825,12 @@ async function loadAlerts() {
   document.querySelectorAll('.rtab').forEach(t => t.classList.toggle('active', t.dataset.region === 'ALL'));
   renderAlertList();
   renderAlertLayers();
+}
+
+function startAlertsPolling() {
+  if (alertsRefreshTimer !== null) return;
+  loadAlerts();
+  alertsRefreshTimer = setInterval(loadAlerts, 60000);
 }
 
 // ── ALERT LIST RENDERING ───────────────────────────────────────────────────
@@ -2344,8 +2351,7 @@ function renderWeather(data, locationName) {
 
 // Only auto-start if beta was already acknowledged (returning user)
 if(window._betaAlreadyAcknowledged){
-  loadAlerts();
-  setInterval(loadAlerts, 60000);
+  startAlertsPolling();
 }
 
 // Called by the "Got it" button
@@ -2354,8 +2360,8 @@ window.acknowledgeBeta = function() {
     try{localStorage.setItem('beta_dismissed','1')}catch(e){}
   }
   document.getElementById('beta-overlay').style.display='none';
-  loadAlerts();
-  setInterval(loadAlerts, 60000);
+  window._betaAlreadyAcknowledged = true;
+  startAlertsPolling();
 };
 
 // ── BUTTON WIRING ─────────────────────────────────────────────────────────
