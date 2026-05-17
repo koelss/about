@@ -365,6 +365,39 @@ button {
   flex-wrap: wrap;
 }
 
+.search-wrap {
+  margin-top: 12px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  padding: 0 14px 0 38px;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+}
+
+.search-input::placeholder {
+  color: var(--dim);
+}
+
+.search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  fill: var(--dim);
+  pointer-events: none;
+}
+
 .feed {
   min-height: 0;
   overflow-y: auto;
@@ -1082,6 +1115,10 @@ button {
         <button class="chip active" data-filter="wildfires" type="button"><span class="chip-dot"></span>Wildfires</button>
         <button class="chip active" data-filter="volcanoes" type="button"><span class="chip-dot"></span>Volcanoes</button>
       </div>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input class="search-input" id="event-search" type="text" placeholder="Search place, event, source..." />
+      </div>
     </div>
 
     <div class="feed">
@@ -1133,6 +1170,7 @@ const detailClose = document.getElementById('detail-close');
 const detailTitle = document.getElementById('detail-title');
 const detailBody = document.getElementById('detail-body');
 const eventList = document.getElementById('event-list');
+const eventSearch = document.getElementById('event-search');
 const selectedCard = document.getElementById('selected-card');
 const panelUpdated = document.getElementById('panel-updated');
 const statQuakes = document.getElementById('stat-quakes');
@@ -1398,7 +1436,8 @@ let autoSpin = true;
 let focusVector = null;
 let focusDistance = 10.4;
 let refreshTimer = null;
-const quakeDetailCache = new Map();
+let eventSearchTerm = '';
+const detailCache = new Map();
 
 try {
   if (localStorage.getItem('globe_beta_dismissed') === '1') {
@@ -1416,6 +1455,10 @@ betaDismiss.addEventListener('click', () => {
 detailClose.addEventListener('click', closeDetailModal);
 detailOverlay.addEventListener('click', event => {
   if (event.target === detailOverlay) closeDetailModal();
+});
+eventSearch.addEventListener('input', () => {
+  eventSearchTerm = eventSearch.value.trim().toLowerCase();
+  renderEventList();
 });
 
 function showStatus(text) {
@@ -1532,7 +1575,7 @@ async function fetchQuakes() {
         description: props.place || 'Recent seismic activity',
         markerScale: THREE.MathUtils.clamp(0.16 + ((props.mag || 0) * 0.055), 0.2, 0.58),
         magnitudeText: `Depth ${depth ? Math.round(depth) : 0} km`,
-        detailUrl: props.detail || '',
+        detailApiUrl: props.detail || '',
         detailLines: [
           `Coordinates ${lat.toFixed(2)}, ${lon.toFixed(2)}`,
           `Updated ${formatAgo(new Date(timestamp).toISOString())}`,
@@ -1572,6 +1615,7 @@ async function fetchEonetEvents() {
         source: `NASA EONET${event.sources?.[0]?.id ? ` / ${event.sources[0].id}` : ''}`,
         description: event.description || `Open ${eventTypeLabel(kind).toLowerCase()} from NASA EONET`,
         markerScale: kind === 'storms' ? 0.42 : kind === 'wildfires' ? 0.3 : 0.26,
+        detailApiUrl: event.link || '',
         detailLines: [
           `Coordinates ${lat.toFixed(2)}, ${lon.toFixed(2)}`,
           Number.isFinite(magnitudeValue) ? `${Math.round(magnitudeValue).toLocaleString()} ${magnitudeUnit || ''}`.trim() : '',
@@ -1669,8 +1713,8 @@ function setSelectedCard(event) {
     .filter(link => link?.url)
     .map(link => `<a class="selected-link" href="${escapeAttr(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`)
     .join('');
-  const detailButton = event.kind === 'quakes' && event.detailUrl
-    ? `<button class="selected-link" type="button" data-detail-id="${escapeAttr(event.id)}">Quake details</button>`
+  const detailButton = event.detailApiUrl
+    ? `<button class="selected-link" type="button" data-detail-id="${escapeAttr(event.id)}">${escapeHtml(eventTypeLabel(event.kind))} details</button>`
     : '';
   const detailRows = (event.detailLines || [])
     .map(line => `<div class="selected-copy">${escapeHtml(line)}</div>`)
@@ -1690,12 +1734,17 @@ function setSelectedCard(event) {
     <div class="selected-actions">${detailButton}${sourceLinks}</div>
   `;
 
-  selectedCard.querySelector('[data-detail-id]')?.addEventListener('click', () => openQuakeDetail(event.id));
+  selectedCard.querySelector('[data-detail-id]')?.addEventListener('click', () => openEventDetail(event.id));
 }
 
 function renderEventList() {
   const visibleEvents = events
     .filter(event => activeFilters.has(event.kind))
+    .filter(event => {
+      if (!eventSearchTerm) return true;
+      const haystack = [event.title, event.place, event.source, categorySummary(event)].join(' ').toLowerCase();
+      return haystack.includes(eventSearchTerm);
+    })
     .sort((a, b) => scoreEvent(b) - scoreEvent(a))
     .slice(0, 14);
 
@@ -1722,10 +1771,12 @@ function renderEventList() {
   });
 
   if (!visibleEvents.length) {
-    const stormMessage = activeFilters.has('storms')
-      ? 'No active severe storms are being published in the current NASA EONET open-event feed.'
-      : 'All visible layers are off. Re-enable a feed to populate the globe.';
-    eventList.innerHTML = `<div class="event-sub" style="padding:8px 8px 20px;color:rgba(200,240,255,0.42)">${stormMessage}</div>`;
+    const emptyMessage = eventSearchTerm
+      ? 'No events match that search right now.'
+      : activeFilters.has('storms')
+        ? 'No active severe storms are being published in the current NASA EONET open-event feed.'
+        : 'All visible layers are off. Re-enable a feed to populate the globe.';
+    eventList.innerHTML = `<div class="event-sub" style="padding:8px 8px 20px;color:rgba(200,240,255,0.42)">${emptyMessage}</div>`;
   }
 }
 
@@ -1800,34 +1851,78 @@ function renderQuakeDetailModal(event, detail) {
     </div>
     <div class="detail-actions">
       <a class="selected-link" href="${escapeAttr(event.url)}" target="_blank" rel="noopener">USGS event page ↗</a>
-      ${event.detailUrl ? `<a class="selected-link" href="${escapeAttr(event.detailUrl)}" target="_blank" rel="noopener">Raw event data ↗</a>` : ''}
+      ${event.detailApiUrl ? `<a class="selected-link" href="${escapeAttr(event.detailApiUrl)}" target="_blank" rel="noopener">Raw event data ↗</a>` : ''}
     </div>
   `;
 }
 
-async function openQuakeDetail(eventId) {
-  const event = events.find(item => item.id === eventId && item.kind === 'quakes');
-  if (!event || !event.detailUrl) return;
+function renderEonetDetailModal(event, detail) {
+  const sources = detail.sources || [];
+  const categories = detail.categories || [];
+  const latestPoint = [...(detail.geometry || [])].reverse()[0] || {};
+  const magLine = Number.isFinite(latestPoint.magnitudeValue)
+    ? `${Math.round(latestPoint.magnitudeValue).toLocaleString()} ${latestPoint.magnitudeUnit || ''}`.trim()
+    : 'No magnitude field from source';
+  const sourceButtons = [
+    ...sources.filter(source => source.url).map(source => `<a class="selected-link" href="${escapeAttr(source.url)}" target="_blank" rel="noopener">${escapeHtml(source.id || 'Source')} report ↗</a>`),
+    detail.link ? `<a class="selected-link" href="${escapeAttr(detail.link)}" target="_blank" rel="noopener">NASA EONET event ↗</a>` : ''
+  ].filter(Boolean).join('');
+
+  detailTitle.textContent = event.title;
+  detailBody.innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-stat">
+        <div class="stat-label">Category</div>
+        <div class="detail-stat-value">${escapeHtml(categories.map(category => category.title).join(', ') || eventTypeLabel(event.kind))}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Latest update</div>
+        <div class="detail-stat-value">${escapeHtml(formatDateTime(latestPoint.date || event.time))}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Source</div>
+        <div class="detail-stat-value">${escapeHtml(sources.map(source => source.id).join(', ') || 'NASA EONET')}</div>
+      </div>
+    </div>
+    <div class="detail-text-block">
+      <div class="hud-kicker">Location</div>
+      <p class="detail-copy">${escapeHtml(event.place || event.title)}</p>
+      <p class="detail-copy">${escapeHtml(formatCoord(event.lat, event.lon))}</p>
+    </div>
+    <div class="detail-text-block">
+      <div class="hud-kicker">Summary</div>
+      <p class="detail-copy">${escapeHtml(detail.description || event.description || 'Open event tracked by NASA EONET.')}</p>
+      <p class="detail-copy">${escapeHtml(magLine)}</p>
+      ${detail.closed ? `<p class="detail-copy">Closed ${escapeHtml(formatDateTime(detail.closed))}</p>` : '<p class="detail-copy">Currently open in the live feed.</p>'}
+    </div>
+    <div class="detail-actions">${sourceButtons}</div>
+  `;
+}
+
+async function openEventDetail(eventId) {
+  const event = events.find(item => item.id === eventId);
+  if (!event || !event.detailApiUrl) return;
 
   detailOverlay.classList.remove('hidden');
   detailOverlay.setAttribute('aria-hidden', 'false');
   detailTitle.textContent = event.title;
-  detailBody.innerHTML = '<div class="detail-copy">Fetching and summarizing USGS event detail…</div>';
+  detailBody.innerHTML = `<div class="detail-copy">Fetching and summarizing ${escapeHtml(eventTypeLabel(event.kind).toLowerCase())} detail…</div>`;
 
   try {
-    let detail = quakeDetailCache.get(event.detailUrl);
+    let detail = detailCache.get(event.detailApiUrl);
     if (!detail) {
-      detail = await fetch(event.detailUrl).then(response => response.json());
-      quakeDetailCache.set(event.detailUrl, detail);
+      detail = await fetch(event.detailApiUrl).then(response => response.json());
+      detailCache.set(event.detailApiUrl, detail);
     }
-    renderQuakeDetailModal(event, detail);
+    if (event.kind === 'quakes') renderQuakeDetailModal(event, detail);
+    else renderEonetDetailModal(event, detail);
   } catch (error) {
-    console.warn('Quake detail load failed:', error);
+    console.warn('Event detail load failed:', error);
     detailBody.innerHTML = `
-      <div class="detail-copy">I couldn't summarize this quake detail cleanly right now.</div>
+      <div class="detail-copy">I couldn't summarize this event detail cleanly right now.</div>
       <div class="detail-actions">
-        <a class="selected-link" href="${escapeAttr(event.url)}" target="_blank" rel="noopener">USGS event page ↗</a>
-        <a class="selected-link" href="${escapeAttr(event.detailUrl)}" target="_blank" rel="noopener">Raw event data ↗</a>
+        <a class="selected-link" href="${escapeAttr(event.url)}" target="_blank" rel="noopener">Open source page ↗</a>
+        <a class="selected-link" href="${escapeAttr(event.detailApiUrl)}" target="_blank" rel="noopener">Raw event data ↗</a>
       </div>
     `;
   }
