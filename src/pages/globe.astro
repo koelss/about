@@ -1573,7 +1573,7 @@ async function fetchQuakes() {
         url: props.url || 'https://earthquake.usgs.gov/',
         source: 'USGS',
         description: props.place || 'Recent seismic activity',
-        markerScale: THREE.MathUtils.clamp(0.16 + ((props.mag || 0) * 0.055), 0.2, 0.58),
+        markerScale: THREE.MathUtils.clamp(0.1 + ((props.mag || 0) * 0.038), 0.14, 0.38),
         magnitudeText: `Depth ${depth ? Math.round(depth) : 0} km`,
         detailApiUrl: props.detail || '',
         detailLines: [
@@ -1614,7 +1614,7 @@ async function fetchEonetEvents() {
         url: event.sources?.[0]?.url || event.link || 'https://eonet.gsfc.nasa.gov/',
         source: `NASA EONET${event.sources?.[0]?.id ? ` / ${event.sources[0].id}` : ''}`,
         description: event.description || `Open ${eventTypeLabel(kind).toLowerCase()} from NASA EONET`,
-        markerScale: kind === 'storms' ? 0.42 : kind === 'wildfires' ? 0.3 : 0.26,
+        markerScale: kind === 'storms' ? 0.28 : kind === 'wildfires' ? 0.2 : 0.18,
         detailApiUrl: event.link || '',
         detailLines: [
           `Coordinates ${lat.toFixed(2)}, ${lon.toFixed(2)}`,
@@ -1661,14 +1661,30 @@ function clearMarkers() {
   markerEntries = [];
 }
 
+function getMarkerEvents() {
+  const caps = {
+    quakes: 48,
+    storms: 18,
+    wildfires: 28,
+    volcanoes: 16
+  };
+
+  return Object.keys(caps).flatMap(kind =>
+    events
+      .filter(event => event.kind === kind)
+      .sort((a, b) => scoreEvent(b) - scoreEvent(a))
+      .slice(0, caps[kind])
+  );
+}
+
 function rebuildMarkers() {
   clearMarkers();
-  events.forEach(event => {
+  getMarkerEvents().forEach(event => {
     const material = new THREE.SpriteMaterial({
       map: markerTextures[event.kind],
       transparent: true,
       depthWrite: false,
-      opacity: activeFilters.has(event.kind) ? 1 : 0.14
+      opacity: activeFilters.has(event.kind) ? 0.8 : 0.1
     });
     const sprite = new THREE.Sprite(material);
     const pos = latLonToVector3(event.lat, event.lon, markerRadius);
@@ -1713,9 +1729,7 @@ function setSelectedCard(event) {
     .filter(link => link?.url)
     .map(link => `<a class="selected-link" href="${escapeAttr(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`)
     .join('');
-  const detailButton = event.detailApiUrl
-    ? `<button class="selected-link" type="button" data-detail-id="${escapeAttr(event.id)}">${escapeHtml(eventTypeLabel(event.kind))} details</button>`
-    : '';
+  const detailButton = `<button class="selected-link" type="button" data-detail-id="${escapeAttr(event.id)}">${escapeHtml(eventTypeLabel(event.kind))} details</button>`;
   const detailRows = (event.detailLines || [])
     .map(line => `<div class="selected-copy">${escapeHtml(line)}</div>`)
     .join('');
@@ -1766,7 +1780,7 @@ function renderEventList() {
       <div class="event-sub">${escapeHtml(categorySummary(event))} · ${escapeHtml(event.place || 'Live event')}</div>
       <div class="event-sub">${escapeHtml(event.source)}</div>
     `;
-    btn.addEventListener('click', () => focusEvent(event.id));
+    btn.addEventListener('click', () => focusEvent(event.id, { openDetail: true }));
     eventList.appendChild(btn);
   });
 
@@ -1899,14 +1913,55 @@ function renderEonetDetailModal(event, detail) {
   `;
 }
 
+function renderFallbackDetailModal(event) {
+  const sourceButtons = (event.sourceLinks || [{ label: 'Open source page', url: event.url }])
+    .filter(link => link?.url)
+    .map(link => `<a class="selected-link" href="${escapeAttr(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.label)} ↗</a>`)
+    .join('');
+
+  detailTitle.textContent = event.title;
+  detailBody.innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-stat">
+        <div class="stat-label">Category</div>
+        <div class="detail-stat-value">${escapeHtml(eventTypeLabel(event.kind))}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Reported</div>
+        <div class="detail-stat-value">${escapeHtml(formatDateTime(event.time))}</div>
+      </div>
+      <div class="detail-stat">
+        <div class="stat-label">Source</div>
+        <div class="detail-stat-value">${escapeHtml(event.source || 'Official source')}</div>
+      </div>
+    </div>
+    <div class="detail-text-block">
+      <div class="hud-kicker">Location</div>
+      <p class="detail-copy">${escapeHtml(event.place || event.title)}</p>
+      <p class="detail-copy">${escapeHtml(formatCoord(event.lat, event.lon))}</p>
+    </div>
+    <div class="detail-text-block">
+      <div class="hud-kicker">Summary</div>
+      <p class="detail-copy">${escapeHtml(event.description || 'Official event now visible on the globe feed.')}</p>
+      ${(event.detailLines || []).map(line => `<p class="detail-copy">${escapeHtml(line)}</p>`).join('')}
+    </div>
+    <div class="detail-actions">${sourceButtons}</div>
+  `;
+}
+
 async function openEventDetail(eventId) {
   const event = events.find(item => item.id === eventId);
-  if (!event || !event.detailApiUrl) return;
+  if (!event) return;
 
   detailOverlay.classList.remove('hidden');
   detailOverlay.setAttribute('aria-hidden', 'false');
   detailTitle.textContent = event.title;
   detailBody.innerHTML = `<div class="detail-copy">Fetching and summarizing ${escapeHtml(eventTypeLabel(event.kind).toLowerCase())} detail…</div>`;
+
+  if (!event.detailApiUrl) {
+    renderFallbackDetailModal(event);
+    return;
+  }
 
   try {
     let detail = detailCache.get(event.detailApiUrl);
@@ -1931,13 +1986,14 @@ async function openEventDetail(eventId) {
 function updateMarkerVisibility() {
   markerEntries.forEach(entry => {
     const visible = activeFilters.has(entry.event.kind);
-    entry.sprite.material.opacity = visible ? 1 : 0.14;
+    entry.sprite.material.opacity = visible ? 0.8 : 0.1;
     entry.sprite.visible = true;
   });
   renderEventList();
 }
 
-function focusEvent(id) {
+function focusEvent(id, options = {}) {
+  const { openDetail = false } = options;
   const event = events.find(item => item.id === id);
   if (!event) return;
   selectedId = id;
@@ -1951,6 +2007,7 @@ function focusEvent(id) {
   renderEventList();
   a11yStatus.textContent = `${eventTypeLabel(event.kind)} selected: ${event.title}`;
   showStatus(`${eventTypeLabel(event.kind)} locked`);
+  if (openDetail) openEventDetail(id);
 }
 
 function resetCamera() {
@@ -2002,7 +2059,7 @@ renderer.domElement.addEventListener('click', event => {
   const intersects = raycaster.intersectObjects(markerEntries.map(entry => entry.sprite), false);
   if (!intersects.length) return;
   const id = intersects[0].object.userData.eventId;
-  focusEvent(id);
+  focusEvent(id, { openDetail: true });
 });
 
 let coastlinesLoaded = false;
@@ -2056,7 +2113,7 @@ function animate() {
   }
 
   markerEntries.forEach((entry, index) => {
-    const pulse = 1 + Math.sin(elapsed * 2.2 + index * 0.35) * 0.12;
+    const pulse = 1 + Math.sin(elapsed * 2.2 + index * 0.35) * 0.06;
     entry.sprite.scale.setScalar(entry.baseScale * pulse);
   });
 
