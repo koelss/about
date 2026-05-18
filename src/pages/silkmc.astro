@@ -1,6 +1,5 @@
 ---
 const repoUrl = 'https://github.com/tame-gg/SilkMC';
-const releaseUrl = 'https://github.com/tame-gg/SilkMC/releases/latest';
 const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1-alpha/silkmc-paperclip-26.1.2.local-SNAPSHOT.jar';
 ---
 <!DOCTYPE html>
@@ -9,12 +8,12 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SilkMC - Region-Threaded Minecraft Server Software</title>
-  <meta name="description" content="SilkMC is an alpha Folia-derived Minecraft server platform focused on regional multithreading, practical plugin compatibility, and visible safety warnings." />
+  <meta name="description" content="SilkMC is an early Folia-derived Minecraft server platform focused on regional multithreading and practical Paper, Bukkit, and Spigot plugin compatibility." />
 
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://koels.site/silkmc" />
   <meta property="og:title" content="SilkMC - Region-Threaded Minecraft Server Software" />
-  <meta property="og:description" content="An alpha Folia fork focused on preserving regional multithreading while improving Paper, Bukkit, and Spigot plugin compatibility." />
+  <meta property="og:description" content="A Folia fork focused on preserving regional multithreading while improving Paper, Bukkit, and Spigot plugin compatibility." />
   <meta property="og:site_name" content="SilkMC" />
   <meta property="og:image" content="https://koels.site/og.png" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -190,10 +189,10 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
       display: inline-flex;
       margin-top: 1rem;
       padding: 0.55rem 0.75rem;
-      border: 1px solid rgba(255,107,122,0.32);
+      border: 1px solid rgba(64,200,255,0.2);
       border-radius: 8px;
-      background: rgba(255,107,122,0.06);
-      color: rgba(255,216,222,0.9);
+      background: rgba(64,200,255,0.045);
+      color: rgba(200,240,255,0.68);
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.66rem;
       line-height: 1.55;
@@ -238,10 +237,10 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
       max-width: 1180px;
       margin: 0 auto;
       padding: 1rem 1.25rem;
-      border-top: 1px solid rgba(255,107,122,0.28);
-      border-bottom: 1px solid rgba(255,107,122,0.2);
-      background: rgba(32,7,18,0.28);
-      color: rgba(255,216,222,0.86);
+      border-top: 1px solid rgba(64,200,255,0.16);
+      border-bottom: 1px solid rgba(64,200,255,0.1);
+      background: rgba(2,12,28,0.42);
+      color: rgba(200,240,255,0.68);
     }
 
     .alpha-strip strong {
@@ -249,7 +248,7 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
       font-size: 0.68rem;
       letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: var(--red);
+      color: var(--cyan);
     }
 
     .alpha-strip span {
@@ -597,7 +596,7 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
       h1 { font-size: clamp(2.65rem, 13vw, 4rem); }
       .hero-actions { flex-direction: column; }
       .btn-primary, .btn-ghost { justify-content: center; }
-      .alpha-strip { grid-template-columns: 1fr; margin: 0 1.25rem; border: 1px solid rgba(255,107,122,0.24); border-radius: 12px; }
+      .alpha-strip { grid-template-columns: 1fr; margin: 0 1.25rem; border: 1px solid rgba(64,200,255,0.16); border-radius: 12px; }
       .stats-strip { flex-wrap: wrap; }
       .stat { min-width: 50%; border-right: none; border-bottom: 1px solid var(--border); }
       .section { padding: 4rem 1.25rem; }
@@ -644,18 +643,18 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
         </div>
         <div>
           <div class="hero-actions">
-            <a class="btn-primary" id="download-btn" href={paperclipUrl}>Download paperclip jar</a>
-            <a class="btn-ghost" href={releaseUrl} target="_blank" rel="noopener">Latest release</a>
+            <a class="btn-primary" id="download-btn" href={paperclipUrl}>Download server jar</a>
+            <a class="btn-ghost" href={repoUrl} target="_blank" rel="noopener">View source</a>
           </div>
-          <p class="inline-alert">Alpha: bugs, memory leaks, security issues, and data loss are possible.</p>
+          <p class="inline-alert">Direct download for the runnable paperclip build.</p>
         </div>
       </div>
     </div>
   </section>
 
   <div class="alpha-strip">
-    <strong>Alpha warning</strong>
-    <span>SilkMC may have bugs, memory leaks, security issues, crashes, data loss, plugin breakage, and unstable behavior. Test on disposable worlds before trusting it anywhere important.</span>
+    <strong>Early alpha</strong>
+    <span>SilkMC is still being hardened. Test on a backup or staging server first; bugs, leaks, security issues, or plugin edge cases may still exist.</span>
   </div>
 
   <div class="stats-strip" id="status">
@@ -669,7 +668,7 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
     </div>
     <div class="stat">
       <span class="stat-value r">alpha</span>
-      <span class="stat-label">bugs and security risks possible</span>
+      <span class="stat-label">early testing build</span>
     </div>
     <div class="stat">
       <span class="stat-value">GPL-3.0</span>
@@ -695,7 +694,7 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
       <div class="card c2 reveal" style="transition-delay:.1s">
         <div class="card-title">Visible unsafe edges</div>
         <p class="card-body">When behavior cannot be made safe, SilkMC should warn, disable, or fail loudly instead of hiding a corruption risk.</p>
-        <span class="card-chip red">alpha guardrails</span>
+        <span class="card-chip red">guardrails</span>
       </div>
 
       <div class="card c3 reveal" style="transition-delay:.14s">
@@ -704,7 +703,7 @@ const paperclipUrl = 'https://github.com/tame-gg/SilkMC/releases/download/v0.1.1
       </div>
       <div class="card c3 reveal" style="transition-delay:.18s">
         <div class="card-title">What it is not promising</div>
-        <p class="card-body">It is not a guarantee that every plugin works, and it is not production-hardened. Bugs, memory leaks, security issues, and data loss remain possible.</p>
+        <p class="card-body">It is not a guarantee that every plugin works, and it is not production-hardened yet. Test carefully before using it for anything important.</p>
       </div>
     </div>
   </section>
@@ -740,7 +739,7 @@ cd SilkMC
         <span class="step-num">03</span>
         <div>
           <div class="step-title">Treat warnings as test data</div>
-          <p class="step-desc">Add plugins gradually, keep logs from each run, and test on disposable worlds because alpha bugs, leaks, and security issues may still exist.</p>
+          <p class="step-desc">Add plugins gradually, keep logs from each run, and test on a backup or staging world while the alpha settles.</p>
         </div>
       </div>
     </div>
@@ -755,10 +754,9 @@ cd SilkMC
   <div class="footer-links">
     <a href="/">Home</a>
     <a href={repoUrl} target="_blank" rel="noopener">GitHub</a>
-    <a href="https://github.com/tame-gg/SilkMC/releases" target="_blank" rel="noopener">Releases</a>
     <a href="https://github.com/tame-gg/SilkMC/blob/main/README.md" target="_blank" rel="noopener">Docs</a>
   </div>
-  <span class="footer-copy">SilkMC is alpha software derived from Folia and Paper. Bugs, memory leaks, security vulnerabilities, data loss, and plugin incompatibilities are possible.</span>
+  <span class="footer-copy">SilkMC is an early alpha project derived from Folia and Paper. Test on backups first while compatibility work is still moving.</span>
 </footer>
 
 <script is:inline>
