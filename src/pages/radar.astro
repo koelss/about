@@ -890,12 +890,12 @@ body { background:#020810; color:#c8f0ff; }
 <div id="panel-backdrop" onclick="togglePanel()"></div>
 
 <div id="legend">
-  <div class="legend-title">Intensity</div>
+  <div class="legend-title">Reflectivity</div>
   <div class="legend-items">
-    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#35d04f,#73ec5d)"></div><div class="legend-label">Light</div></div>
-    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#ffd84a,#ff9d2f)"></div><div class="legend-label">Moderate</div></div>
-    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#ff4a3d,#9d39ff)"></div><div class="legend-label">Heavy</div></div>
-    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#f7f6ff,#ffffff)"></div><div class="legend-label">Extreme</div></div>
+    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#2cc84a,#74ec63)"></div><div class="legend-label">Light Rain</div></div>
+    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#f6df4d,#ffb432)"></div><div class="legend-label">Moderate Rain</div></div>
+    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#ff8a2b,#ff3b30)"></div><div class="legend-label">Heavy Rain</div></div>
+    <div class="legend-item"><div class="legend-dot" style="background:linear-gradient(90deg,#a73fff,#ffffff)"></div><div class="legend-label">Severe Core</div></div>
   </div>
 </div>
 
@@ -1006,8 +1006,8 @@ function suppressTileErrors(layer) {
 // Override Leaflet's internal tile error handling globally
 L.GridLayer.prototype._tileOnError = function() {};
 
-const FRAME_INTERVAL = 360;  // ms between frame advances
-const HOLD_INTERVAL  = 700;  // shorter pause keeps loops feeling smoother
+const FRAME_INTERVAL = 520;  // slower cadence feels closer to real radar playback
+const HOLD_INTERVAL  = 1050; // brief pause at the newest frame before looping
 const MAX_RADAR_FRAMES = 6;  // fewer mounted layers = less tile churn and jank
 
 // IEM time slots matching approx 10-min intervals to align with RainViewer
